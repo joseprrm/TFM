@@ -20,14 +20,11 @@ from flask import request
 app = Flask(__name__)
 
 
-
-
 @app.route("/datasets/<dataset_name>", methods = ["GET"])
 def get_dataset(dataset_name):
     data_dataframe = read_dataset(dataset_name)
 
     if request.data:
-
         if request.json.get('random') == True:
             if request.json.get('number_of_samples'):
                 data_dataframe = data_dataframe.sample(request.json.get('number_of_samples'))
@@ -51,15 +48,21 @@ def get_dataset(dataset_name):
         if request.json.get('row') is not None:
             data_dataframe = data_dataframe.iloc[request.json["row"]]
 
-    data_serialized = serialize2(data_dataframe)
+    data_serialized = None
+
+    match request.json.get('method'):
+        case 'pickle_base64':
+            data_serialized = serialize_pickle_base64(data_dataframe)
+        case 'json':
+            data_serialized = serialize_json(data_dataframe)
     return data_serialized
 
-def serialize(data):
+def serialize_pickle_base64(data):
     data_pickle = pickle.dumps(data)
     data_serialized = base64.b64encode(data_pickle)
     return data_serialized
 
-def serialize2(data):
+def serialize_json(data):
     _json_str = ""
     match data:
         case pandas.DataFrame():

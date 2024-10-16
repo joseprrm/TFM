@@ -2,11 +2,11 @@ import unittest
 from icecream import ic
 import pandas as pd
 
-from client import Client, ClientJSON
+from client import Client
 
 class TestClient(unittest.TestCase):
     def setUp(self):
-        self.client = Client("127.0.0.1", 5000)
+        self.client = Client.get_client("127.0.0.1", 5000)
 
     def test_list_datasets(self):
         dataset_names = self.client.list_datasets()
@@ -63,17 +63,24 @@ class TestClient(unittest.TestCase):
         self.assertIn("X3", column_names)
         self.assertIn("X4", column_names)
 
+class TestClientJSON(TestClient):
+    def setUp(self):
+        self.client = Client.get_client("127.0.0.1", 5000, method="json")
+
 class TestDataset(unittest.TestCase):
     def setUp(self):
-        _client = ClientJSON("127.0.0.1", 5000)
+        self._client = Client.get_client("127.0.0.1", 5000)
+        self.setup_datasets()
+
+    def setup_datasets(self):
         # It has 15 rows
-        self.ds = _client.get_dataset('iris_test')
+        self.ds = self._client.get_dataset('iris_test')
         # It has 3 rows
-        self.ds_small = _client.get_dataset('iris_test_small')
+        self.ds_small = self._client.get_dataset('iris_test_small')
         # Different columns
-        self.ds_columns_col = _client.get_dataset('iris_test_col')
+        self.ds_columns_col = self._client.get_dataset('iris_test_col')
         # No header
-        self.ds_columns_X = _client.get_dataset('iris_test_no_header')
+        self.ds_columns_X = self._client.get_dataset('iris_test_no_header')
 
     def test_column_1(self):
         for e1, e2 in zip(list(self.ds_columns_col.columns), ["col1", "col2", "col3", "col4", "species"]):
@@ -266,6 +273,10 @@ class TestDataset(unittest.TestCase):
             self.ds.filter_columns(['sepal_length', 'species']).iloc[3].petal_length
         
 
+class TestDatasetJSON(TestDataset):
+    def setUp(self):
+        self._client = Client.get_client("127.0.0.1", 5000, method="json")
+        self.setup_datasets()
 
 
 if __name__ == '__main__':

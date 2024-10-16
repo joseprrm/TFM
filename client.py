@@ -190,6 +190,19 @@ class Dataset():
 #        return str(self.client.read_csv(self.name).head())
 
 class Client():
+    @classmethod
+    def get_client(cls, *args, method="pickle_base64"):
+        """
+        Factory method to return different types of client.
+        """
+        match method:
+            case "pickle_base64":
+                return Client(*args)
+            case "json":
+                return ClientJSON(*args)
+            case _:
+                raise Exception("PROGRAMMING ERROR")
+
     def __init__(self, server_address, server_port):
         """
         server_address: a string with the IP or hostname of the server
@@ -216,6 +229,7 @@ class Client():
 
         # This deletes the elements that are None, so that we don't send them to the server in the json
         query = {k:v for k,v in kwargs.items() if v is not None}
+        query = self.add_method(query)
 
         if query:
             response = requests.get(url, json=query)
@@ -226,6 +240,11 @@ class Client():
         #ic(f"{len(response.content)/1024/1024} megabytes")
         contents = self.deserialize(response.text)
         return contents
+
+    def add_method(self, query):
+        query['method'] = 'pickle_base64'
+        return query
+
 
     def deserialize(self, data_serialized):
         data_pickled = base64.b64decode(data_serialized)
@@ -276,3 +295,7 @@ class ClientJSON(Client):
             case _:
                 raise Exception("PROGRAMMING ERROR")
         return data
+
+    def add_method(self, query):
+        query['method'] = 'json'
+        return query
