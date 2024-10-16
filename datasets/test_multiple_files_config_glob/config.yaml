@@ -1,0 +1,3 @@
+dataset:
+  header_in_file: True
+  data_files: "*_iris.csv"

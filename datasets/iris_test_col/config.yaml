@@ -1,0 +1,9 @@
+dataset:
+  name: iris_test_col
+  header_in_file: False
+  columns:
+    - col1
+    - col2
+    - col3
+    - col4
+    - species

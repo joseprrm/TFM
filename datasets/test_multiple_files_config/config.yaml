@@ -1,0 +1,6 @@
+dataset:
+  header_in_file: True
+  data_files: 
+    - 0_iris.csv
+    - 1_iris.csv
+    - 2_iris.csv
