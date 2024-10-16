@@ -6,6 +6,7 @@ Implementado en Python 3.12.6. Dependencias en requirements.txt.
 En el makefile están los principales comandos.
 
 ### Ejecutar servidor
+Ejecuta el servidor. Ahora mismo se ejecuta en localhost:5000. Se utiliza en modo debug de Flask.
 ```
 make server
 ```
@@ -37,7 +38,9 @@ Tests principales
 Algunos test para comprobar que se leen bien los metadatos de los datasets.
 
 ### requirements.txt
-Dependencias. Ahora mismo tiene más de las que necesita, hace falta limpiarlo (TODO).
+Dependencias. Ahora mismo tiene más de las que necesita, hace falta limpiarlo (TODO). Mejor ejecutarlo en un virtualenv.
 ```
+python -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 ```
