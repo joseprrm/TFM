@@ -283,5 +283,10 @@ class TestDatasetPickle(TestDataset):
         self._client = Client.get_client("127.0.0.1", 5000, method="pickle")
         self.setup_datasets()
 
+class TestDatasetPickleCompressed(TestDataset):
+    def setUp(self):
+        self._client = Client.get_client("127.0.0.1", 5000, method="pickle_compressed")
+        self.setup_datasets()
+
 if __name__ == '__main__':
     unittest.main()

@@ -200,6 +200,8 @@ class Client():
                 return Client(*args)
             case "pickle":
                 return ClientPickle(*args)
+            case "pickle_compressed":
+                return ClientPickleCompressed(*args)
             case "json":
                 return ClientJSON(*args)
             case _:
@@ -296,4 +298,15 @@ class ClientPickle(Client):
 
     def add_method(self, query):
         query['method'] = 'pickle'
+        return query
+
+import zlib
+class ClientPickleCompressed(Client):
+    def deserialize(self, response):
+        # we take the raw bytes in the http payload
+        data = pickle.loads(zlib.decompress(response.content))
+        return data
+
+    def add_method(self, query):
+        query['method'] = 'pickle_compressed'
         return query

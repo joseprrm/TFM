@@ -55,8 +55,12 @@ def get_dataset(dataset_name):
             data_serialized = serialize_pickle_base64(data_dataframe)
         case 'pickle':
             data_serialized = serialize_pickle(data_dataframe)
+        case 'pickle_compressed':
+            data_serialized = serialize_pickle_compressed(data_dataframe)
         case 'json':
             data_serialized = serialize_json(data_dataframe)
+        case _:
+            raise Exception("PROGRAMMING ERROR")
     return data_serialized
 
 def serialize_pickle_base64(data):
@@ -66,6 +70,11 @@ def serialize_pickle_base64(data):
 
 def serialize_pickle(data):
     data_serialized = pickle.dumps(data)
+    return data_serialized
+
+import zlib
+def serialize_pickle_compressed(data):
+    data_serialized = zlib.compress(pickle.dumps(data))
     return data_serialized
 
 def serialize_json(data):
