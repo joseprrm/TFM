@@ -198,6 +198,8 @@ class Client():
         match method:
             case "pickle_base64":
                 return Client(*args)
+            case "pickle":
+                return ClientPickle(*args)
             case "json":
                 return ClientJSON(*args)
             case _:
@@ -238,7 +240,7 @@ class Client():
 
         #ic(f"{len(response.content)} bytes")
         #ic(f"{len(response.content)/1024/1024} megabytes")
-        contents = self.deserialize(response.text)
+        contents = self.deserialize(response)
         return contents
 
     def add_method(self, query):
@@ -246,23 +248,9 @@ class Client():
         return query
 
 
-    def deserialize(self, data_serialized):
-        data_pickled = base64.b64decode(data_serialized)
+    def deserialize(self, response):
+        data_pickled = base64.b64decode(response.text)
         data = pickle.loads(data_pickled)
-        return data
-
-
-    def deserialize2(self, data_serialized):
-        data = None
-        match data_serialized.split(",", 1):
-            case ["builtin", _json]:
-                data = json.loads(_json)
-            case ["dataframe", _json]:
-                data = pandas.read_json(StringIO(_json), typ = 'frame')
-            case ["series", _json]:
-                data = pandas.read_json(StringIO(_json), typ = 'series')
-            case _:
-                raise Exception("PROGRAMMING ERROR")
         return data
 
     def list_datasets(self):
@@ -283,9 +271,9 @@ class Client():
         return column_names
 
 class ClientJSON(Client):
-    def deserialize(self, data_serialized):
+    def deserialize(self, response):
         data = None
-        match data_serialized.split(",", 1):
+        match response.text.split(",", 1):
             case ["builtin", _json]:
                 data = json.loads(_json)
             case ["dataframe", _json]:
@@ -298,4 +286,14 @@ class ClientJSON(Client):
 
     def add_method(self, query):
         query['method'] = 'json'
+        return query
+
+class ClientPickle(Client):
+    def deserialize(self, response):
+        # we take the raw bytes in the http payload
+        data = pickle.loads(response.content)
+        return data
+
+    def add_method(self, query):
+        query['method'] = 'pickle'
         return query

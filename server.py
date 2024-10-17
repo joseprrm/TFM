@@ -53,6 +53,8 @@ def get_dataset(dataset_name):
     match request.json.get('method'):
         case 'pickle_base64':
             data_serialized = serialize_pickle_base64(data_dataframe)
+        case 'pickle':
+            data_serialized = serialize_pickle(data_dataframe)
         case 'json':
             data_serialized = serialize_json(data_dataframe)
     return data_serialized
@@ -60,6 +62,10 @@ def get_dataset(dataset_name):
 def serialize_pickle_base64(data):
     data_pickle = pickle.dumps(data)
     data_serialized = base64.b64encode(data_pickle)
+    return data_serialized
+
+def serialize_pickle(data):
+    data_serialized = pickle.dumps(data)
     return data_serialized
 
 def serialize_json(data):
