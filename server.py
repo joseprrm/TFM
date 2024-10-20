@@ -119,8 +119,18 @@ def get_column_names(dataset_name):
 
 @app.route("/datasets/<dataset_name>/number_of_rows", methods = ["GET"])
 def get_number_of_rows(dataset_name):
-    dataframe = read_dataset(dataset_name)
-    number_of_rows = dataframe.shape[0]
+    dataset_info = current_app.config['DATASET_METADATA'][dataset_name]
+    paths = dataset_info['data_files']
+    
+    number_of_rows = 0
+    for path in paths:
+        with open(path, 'rt') as f:
+            for line in f:
+                number_of_rows += 1
+    ic(dataset_info.get('header_in_file'))
+    if dataset_info.get('header_in_file') == True:
+        number_of_rows = number_of_rows - 1*len(paths)
+
     response = json.dumps(number_of_rows)
     return response
 
@@ -141,6 +151,7 @@ def prova():
 # we tried using a python's global variable, but it doesn't get updated by the SIGHUP handler, probably because of Flask's internal threads and processes
 with app.app_context():
     current_app.config['DATASET_METADATA'] = init()
+    ic(current_app.config['DATASET_METADATA'])
 
 # signal handler for SIGHUP
 def sighup_handler(signum, frame):

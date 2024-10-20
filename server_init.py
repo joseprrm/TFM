@@ -21,9 +21,13 @@ def get_columns(dataset_info):
         columns = []
         # check if some column is a number  
         if any([is_number(x) for x in dataframe.columns]):
+            # header is not in file TODO refactor
+            dataset_info["header_in_file"] = False
             # some column is a number, so probably the csv is missing the headers, so we setup made up column names
             return generate_column_names(dataframe)
         else:
+            # header is in file. TODO refactor
+            dataset_info["header_in_file"] = True
             # if not, use the headers as read by pandas
             return list(dataframe.columns)
 
