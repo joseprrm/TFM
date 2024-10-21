@@ -120,20 +120,30 @@ def get_column_names(dataset_name):
 @app.route("/datasets/<dataset_name>/number_of_rows", methods = ["GET"])
 def get_number_of_rows(dataset_name):
     dataset_info = current_app.config['DATASET_METADATA'][dataset_name]
-    paths = dataset_info['data_files']
-    
-    number_of_rows = 0
-    for path in paths:
-        with open(path, 'rt') as f:
-            for line in f:
-                number_of_rows += 1
-    ic(dataset_info.get('header_in_file'))
-    if dataset_info.get('header_in_file') == True:
-        number_of_rows = number_of_rows - 1*len(paths)
+
+    number_of_rows = None
+    if tmp := dataset_info.get('number_of_rows'):
+        # if it is present in the metadata, use it
+        number_of_rows = int(tmp)
+    else:
+        # else, calculate it by counting the lines
+
+        paths = dataset_info['data_files']
+
+        number_of_rows = 0
+        for path in paths:
+            with open(path, 'rt') as f:
+                for line in f:
+                    number_of_rows += 1
+        ic(dataset_info.get('header_in_file'))
+        if dataset_info.get('header_in_file') == True:
+            number_of_rows = number_of_rows - 1*len(paths)
+
+        # "cache" it
+        dataset_info['number_of_rows'] = number_of_rows
 
     response = json.dumps(number_of_rows)
     return response
-
 
 @app.route("/datasets")
 def datasets():
