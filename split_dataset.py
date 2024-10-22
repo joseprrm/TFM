@@ -5,13 +5,13 @@ import pandas
 
 header_in_file = True
 
-dataset_path = "datasets/big_csv_1g/big_csv_1g.csv"
+dataset_path = "datasets/big_csv_int_1g/csv.csv"
 
-output_dir = "datasets/big_csv_1g_split"
+output_dir = "datasets/big_csv_int_1g_split/"
 
 template = "{number}.csv"
 
-ROWS_IN_PARTITION = 100000
+ROWS_IN_PARTITION = 10000
 FILENAME_ZEROS_PADDING = 5
 
 def write_partition(partition, partition_number):
@@ -45,7 +45,7 @@ def read_partition(file):
     return partition, end_of_file
 
 
-config = {'dataset': {'name': 'big_csv_1g_split', 'header_in_file': header_in_file, 'rows':[], 'optimized': True}}
+config = {'dataset': {'name': 'big_csv_int_1g_split', 'header_in_file': header_in_file, 'rows':[], 'optimized': True}}
 total_lines_read = 0
 
 partition_number = 0

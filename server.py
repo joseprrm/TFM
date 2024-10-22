@@ -9,6 +9,7 @@ import pandas as pd
 import yaml
 from icecream import ic
 import glob
+import time
 
 from server_init import init
 from utils import is_number
@@ -22,7 +23,13 @@ app = Flask(__name__)
 
 @app.route("/datasets/<dataset_name>", methods = ["GET"])
 def get_dataset(dataset_name):
-    data_dataframe = read_dataset(dataset_name)
+    data_dataframe = None
+    optimized = current_app.config['DATASET_METADATA'][dataset_name].get('optimized')
+
+    if optimized:
+        data_dataframe = read_dataset_optimized(dataset_name, request.json.get('row'))
+    else:
+        data_dataframe = read_dataset(dataset_name)
 
     if request.data:
         if request.json.get('random') == True:
@@ -45,8 +52,12 @@ def get_dataset(dataset_name):
             # Reindex to give a Series/DataFrame with indexes starting from 0
             data_dataframe = data_dataframe.reset_index(drop=True)
 
+        #if optimized:
+        #    data_dataframe.index = range(optimized_start, optimized_end)
+
+
         if request.json.get('row') is not None:
-            data_dataframe = data_dataframe.iloc[request.json["row"]]
+            data_dataframe = data_dataframe.loc[request.json["row"]]
 
     data_serialized = None
 
@@ -97,6 +108,38 @@ def read_one_csv(path, dataset_info):
         dataframe = pandas.read_csv(path)
     return dataframe
 
+def first_true_element(l):
+    for i, boolean in enumerate(l):
+        if boolean:
+            return i
+    return None
+
+def read_dataset_optimized(dataset_name, row):
+    # first we search in the dataset configurations
+    dataset_info = current_app.config['DATASET_METADATA'][dataset_name]
+    paths = dataset_info['data_files']
+    rows = dataset_info['rows']
+
+    # determine the partition
+    #index = first_true_element()
+    rows = [list(x.keys())[0] for x in rows]
+    index = first_true_element([row < i for i in rows])
+
+    dataframe = read_one_csv(paths[index], dataset_info)
+
+    #for path in paths[0:]:
+    #    df1 = dataframe
+    #    df2 = read_one_csv(path, dataset_info)
+    #    dataframe = pandas.concat([df1, df2], ignore_index=True) # ignore index to reindex
+
+    dataframe.columns = dataset_info['columns']
+
+    start = 0 if index == 0 else rows[index - 1]
+    end = rows[index]
+
+    dataframe.index = range(start, end)
+    return dataframe
+
 def read_dataset(dataset_name):
     # first we search in the dataset configurations
     dataset_info = current_app.config['DATASET_METADATA'][dataset_name]
@@ -135,7 +178,6 @@ def get_number_of_rows(dataset_name):
             with open(path, 'rt') as f:
                 for line in f:
                     number_of_rows += 1
-        ic(dataset_info.get('header_in_file'))
         if dataset_info.get('header_in_file') == True:
             number_of_rows = number_of_rows - 1*len(paths)
 
@@ -161,7 +203,6 @@ def prova():
 # we tried using a python's global variable, but it doesn't get updated by the SIGHUP handler, probably because of Flask's internal threads and processes
 with app.app_context():
     current_app.config['DATASET_METADATA'] = init()
-    ic(current_app.config['DATASET_METADATA'])
 
 # signal handler for SIGHUP
 def sighup_handler(signum, frame):

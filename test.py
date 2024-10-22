@@ -288,5 +288,31 @@ class TestDatasetPickleCompressed(TestDataset):
         self._client = Client.get_client("127.0.0.1", 5000, method="pickle_compressed")
         self.setup_datasets()
 
+class TestDatasetOptimized(unittest.TestCase):
+    def setUp(self):
+        self._client = Client.get_client("127.0.0.1", 5000)
+        self.setup_datasets()
+
+    def setup_datasets(self):
+        self.dataset_nosplit = self._client.get_dataset('big_csv_int_1g')
+        self.dataset_split = self._client.get_dataset('big_csv_int_1g_split')
+
+    def test_a(self):
+        # first row
+        self.assertEqual(self.dataset_nosplit[0, "Z"], self.dataset_split[0, "Z"] )
+
+        # random row
+        self.assertTrue(self.dataset_nosplit[123456].equals(self.dataset_split[123456]))
+        
+        # limits of a partition
+        self.assertTrue(self.dataset_nosplit[209999].equals(self.dataset_split[209999]))
+        self.assertTrue(self.dataset_nosplit[210000].equals(self.dataset_split[210000]))
+        self.assertTrue(self.dataset_nosplit[210001].equals(self.dataset_split[210001]))
+        
+        # last row
+        last_row = self.dataset_nosplit.number_of_rows() - 1
+        self.assertTrue(self.dataset_nosplit[last_row].equals(self.dataset_split[last_row]))
+
+
 if __name__ == '__main__':
     unittest.main()
