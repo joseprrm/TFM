@@ -16,10 +16,12 @@ import time
 
 app = Flask(__name__)
 
+def get_dataset_metadata_form_name(name):
+    return current_app.config['DATASET_METADATA'][name]
 
 @app.route("/datasets/<dataset_name>", methods = ["GET"])
 def get_dataset(dataset_name):
-    dataset_metadata = current_app.config['DATASET_METADATA'][dataset_name]
+    dataset_metadata = get_dataset_metadata_form_name(dataset_name)
 
     optimized = dataset_metadata.get('optimized')
     if optimized:
@@ -56,13 +58,14 @@ def get_dataset(dataset_name):
 
 @app.route("/datasets/<dataset_name>/column_names", methods = ["GET"])
 def get_column_names(dataset_name):
-    column_names = current_app.config["DATASET_METADATA"][dataset_name]['columns']
+    dataset_metadata = get_dataset_metadata_form_name(dataset_name)
+    column_names = dataset_metadata['columns']
     response = json.dumps(column_names)
     return response
 
 @app.route("/datasets/<dataset_name>/number_of_rows", methods = ["GET"])
 def get_number_of_rows(dataset_name):
-    dataset_metadata = current_app.config['DATASET_METADATA'][dataset_name]
+    dataset_metadata = get_dataset_metadata_form_name(dataset_name)
 
     number_of_rows = None
     if tmp := dataset_metadata.get('number_of_rows'):
@@ -95,13 +98,11 @@ def datasets():
 
 # we use app.config to save the dataset metadata as a "global variable"
 # we tried using a python's global variable, but it doesn't get updated by the SIGHUP handler, probably because of Flask's internal threads and processes
-with app.app_context():
-    current_app.config['DATASET_METADATA'] = server_init.init()
+app.config['DATASET_METADATA'] = server_init.init()
 
 def sighup_handler(signum, frame):
     with app.app_context():
         current_app.config["DATASET_METADATA"] = init()
-        print(current_app.config["DATASET_METADATA"].get("kk"))
         print('Reloading')
 
 signal.signal(signal.SIGHUP, sighup_handler)
