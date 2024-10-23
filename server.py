@@ -42,7 +42,8 @@ def get_dataset(dataset_name):
             step = request.json.get('step')
         else:
             step = 1
-        dataframe = dataframe.iloc[request.json["rows"][0]:request.json["rows"][1]:step]
+        # -1 to make it not include the last number 
+        dataframe = dataframe.loc[request.json["rows"][0]:(request.json["rows"][1] - 1):step]
         # Reindex to give a Series/DataFrame with indexes starting from 0
         dataframe = dataframe.reset_index(drop=True)
 
