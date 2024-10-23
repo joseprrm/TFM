@@ -321,6 +321,12 @@ class TestDatasetOptimized(unittest.TestCase):
 
         self.assertEqual(len(self.dataset_nosplit[range(0, 123456), "Z"]), 123456)
 
+    def test_correct_concat(self):
+        ds1 = self.dataset_split[range(23456, 123456), "Z"]
+        ds2 = self.dataset_split[range(23456, 23456 + 10), "Z"]
+
+        self.assertTrue(ds1.iloc[0:10].equals(ds2.iloc[0:10]))
+
 
 if __name__ == '__main__':
     unittest.main()

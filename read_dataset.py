@@ -1,6 +1,8 @@
 import pandas
 import utils
 
+from icecream import ic
+
 def read_one_csv(path, dataset_metadata):
     if dataset_metadata.get('header_in_file') == False:
         dataframe = pandas.read_csv(path, header=None)
