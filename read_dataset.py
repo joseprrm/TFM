@@ -19,8 +19,8 @@ def read_multiple_csv(paths, dataset_metadata):
     return dataframe
 
 def read_dataset_optimized(dataset_metadata, row_input = None, rows_input = None):
-    paths = dataset_metadata['data_files']
     index = dataset_metadata['index']
+    paths = [list(e.items())[0][1] for e in index]
 
     if row_input is not None:
         rows_input = [row_input, row_input]

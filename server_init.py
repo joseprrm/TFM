@@ -45,8 +45,6 @@ def fill_data_files(dataset_info):
     dataset_info['data_files'] = sorted([os.path.join(dataset_info['path_to_directory'], file) for file in data_files])
 
 def complete_paths_in_index(dataset_info):
-    #ic(dataset_info['index'])
-
     l = []
     for e in dataset_info['index']:
         last_row, path = list(e.items())[0]
@@ -156,5 +154,5 @@ def init():
             complete_paths_in_index(dataset_info)
 
 
-    ic(dataset_infos['big_csv_int_1g_split'])
+    #ic(dataset_infos['big_csv_int_1g_split'])
     return dataset_infos
