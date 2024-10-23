@@ -297,7 +297,7 @@ class TestDatasetOptimized(unittest.TestCase):
         self.dataset_nosplit = self._client.get_dataset('big_csv_int_1g')
         self.dataset_split = self._client.get_dataset('big_csv_int_1g_split')
 
-    def test_a(self):
+    def test_row(self):
         # first row
         self.assertEqual(self.dataset_nosplit[0, "Z"], self.dataset_split[0, "Z"] )
 
@@ -312,6 +312,14 @@ class TestDatasetOptimized(unittest.TestCase):
         # last row
         last_row = self.dataset_nosplit.number_of_rows() - 1
         self.assertTrue(self.dataset_nosplit[last_row].equals(self.dataset_split[last_row]))
+
+    def test_rows(self):
+        # same partition
+        self.assertTrue(self.dataset_nosplit[range(0, 10), "Z"].equals(self.dataset_split[range(0, 10), "Z"]))
+
+        self.assertTrue(self.dataset_nosplit[range(0, 123456), "Z"].equals(self.dataset_split[range(0, 123456), "Z"]))
+
+        self.assertEqual(len(self.dataset_nosplit[range(0, 123456), "Z"]), 123456)
 
 
 if __name__ == '__main__':

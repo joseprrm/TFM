@@ -27,10 +27,14 @@ def get_dataset(dataset_name):
     optimized = current_app.config['DATASET_METADATA'][dataset_name].get('optimized')
 
     if optimized:
-        data_dataframe = read_dataset_optimized(dataset_name, request.json.get('row'))
+        if request.json.get('row') is not None:
+            data_dataframe = read_dataset_optimized(dataset_name, row_input = request.json.get('row'))
+        elif request.json.get('rows') is not None:
+            data_dataframe = read_dataset_optimized_rows(dataset_name, rows_input = request.json.get('rows'))
     else:
         data_dataframe = read_dataset(dataset_name)
 
+    # TODO delete if
     if request.data:
         if request.json.get('random') == True:
             if request.json.get('number_of_samples'):
@@ -114,7 +118,7 @@ def first_true_element(l):
             return i
     return None
 
-def read_dataset_optimized(dataset_name, row):
+def read_dataset_optimized(dataset_name, row_input = None, rows_input = None):
     # first we search in the dataset configurations
     dataset_info = current_app.config['DATASET_METADATA'][dataset_name]
     paths = dataset_info['data_files']
@@ -123,7 +127,7 @@ def read_dataset_optimized(dataset_name, row):
     # determine the partition
     #index = first_true_element()
     rows = [list(x.keys())[0] for x in rows]
-    index = first_true_element([row < i for i in rows])
+    index = first_true_element([row_input < i for i in rows])
 
     dataframe = read_one_csv(paths[index], dataset_info)
 
@@ -136,6 +140,41 @@ def read_dataset_optimized(dataset_name, row):
 
     start = 0 if index == 0 else rows[index - 1]
     end = rows[index]
+
+    dataframe.index = range(start, end)
+    return dataframe
+
+def read_dataset_optimized_rows(dataset_name, row_input = None, rows_input = None):
+    # first we search in the dataset configurations
+    dataset_info = current_app.config['DATASET_METADATA'][dataset_name]
+    paths = dataset_info['data_files']
+    rows = dataset_info['rows']
+
+    first_row, last_row = rows_input
+
+    # determine the partition
+    rows = [list(x.keys())[0] for x in rows]
+
+    index_first_row = first_true_element([first_row < i for i in rows])
+    index_last_row = first_true_element([last_row < i for i in rows])
+
+    ic(index_first_row)
+    ic(index_last_row)
+
+    dataframe = None
+    if index_first_row == index_last_row:
+        index = index_first_row
+        dataframe = read_one_csv(paths[index], dataset_info)
+    else:
+        for index in range(index_first_row, index_last_row + 1):
+            df1 = dataframe
+            df2 = read_one_csv(paths[index], dataset_info)
+            dataframe = pandas.concat([df1, df2], ignore_index=True) # ignore index to reindex
+
+    dataframe.columns = dataset_info['columns']
+
+    start = 0 if index_first_row == 0 else rows[index_first_row - 1]
+    end = rows[index_last_row]
 
     dataframe.index = range(start, end)
     return dataframe
