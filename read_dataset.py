@@ -18,28 +18,35 @@ def read_multiple_csv(paths, dataset_metadata):
         dataframe = pandas.concat([df1, df2], ignore_index=True) # ignore_index to reindex
     return dataframe
 
-def read_dataset_optimized(dataset_metadata, row_input = None, rows_input = None):
-    index = dataset_metadata['index']
-    paths = [list(e.items())[0][1] for e in index]
+def find_partition_index(index_rows, row):
+    return utils.first_true_element([row < i for i in index_rows])
 
+def find_partition_paths(index, first_row, last_row):
+    index_rows = list(index.keys())
+    index_paths = list(index.values())
+
+    first_row_index = find_partition_index(index_rows, first_row)
+    last_row_index = find_partition_index(index_rows, last_row)
+
+    # +1 because we also want the last partition 
+    paths = [index_paths[i] for i in range(first_row_index, last_row_index + 1)]
+    start = 0 if first_row_index == 0 else index_rows[first_row_index - 1]
+    end = index_rows[last_row_index]
+
+    return paths, start, end
+
+def read_dataset_optimized(dataset_metadata, row_input = None, rows_input = None):
     if row_input is not None:
         rows_input = [row_input, row_input]
 
     first_row, last_row = rows_input
 
     # determine the partition
-    rows = [list(x.keys())[0] for x in index]
-
-    index_first_row = utils.first_true_element([first_row < i for i in rows])
-    index_last_row = utils.first_true_element([last_row < i for i in rows])
-
-    # +1 because we also want the last partition 
-    paths = [paths[i] for i in range(index_first_row, index_last_row + 1)]
+    index = dataset_metadata['index']
+    paths, partitions_start, partitions_end = find_partition_paths(index, first_row, last_row)
     dataframe = read_multiple_csv(paths, dataset_metadata)
 
-    start = 0 if index_first_row == 0 else rows[index_first_row - 1]
-    end = rows[index_last_row]
-    dataframe.index = range(start, end)
+    dataframe.index = range(partitions_start, partitions_end)
 
     dataframe.columns = dataset_metadata['columns']
 

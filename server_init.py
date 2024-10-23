@@ -45,25 +45,10 @@ def fill_data_files(dataset_info):
     dataset_info['data_files'] = sorted([os.path.join(dataset_info['path_to_directory'], file) for file in data_files])
 
 def complete_paths_in_index(dataset_info):
-    l = []
-    for e in dataset_info['index']:
-        last_row, path = list(e.items())[0]
-
+    for last_row, path in dataset_info['index'].items():
         if (len(path.split("/")) < 3): 
             path = os.path.join(dataset_info['path_to_directory'], path)
-
-        tmp = {last_row: path}
-        l.append(tmp)
-
-    dataset_info['index'] = l
-
-    #l = []
-    #for file in dataset_info['index']:
-    #    if (len(file.split("/")) < 3): 
-    #        l.append(os.path.join(dataset_info['path_to_directory'], file))
-    #    else:
-    #        l.append(file)
-    #dataset_info['data_files'] = l
+            dataset_info['index'][last_row] = path
 
 def fill_data_files_short(dataset_info):
     # search for data_files that is only a filename, and fix it so it its the whole path
@@ -151,6 +136,7 @@ def init():
         fill_columns(dataset_info)
 
         if dataset_info.get('optimized') == True:
+            #fix_index(dataset_info)
             complete_paths_in_index(dataset_info)
 
 

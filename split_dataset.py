@@ -45,7 +45,7 @@ def read_partition(file):
     return partition, end_of_file
 
 
-config = {'dataset': {'name': 'big_csv_int_1g_split', 'header_in_file': header_in_file, 'index':[], 'optimized': True}}
+config = {'dataset': {'name': 'big_csv_int_1g_split', 'header_in_file': header_in_file, 'index':{}, 'optimized': True}}
 total_lines_read = 0
 
 partition_number = 0
@@ -63,7 +63,7 @@ with open(dataset_path, 'rt') as file:
         lines_read = len(partition)
         total_lines_read += lines_read
 
-        config['dataset']['index'].append({total_lines_read: filename})
+        config['dataset']['index'][total_lines_read] = filename
 
         partition_number += 1
 
