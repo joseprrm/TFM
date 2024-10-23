@@ -30,7 +30,7 @@ def get_dataset(dataset_name):
         if request.json.get('row') is not None:
             data_dataframe = read_dataset_optimized(dataset_name, row_input = request.json.get('row'))
         elif request.json.get('rows') is not None:
-            data_dataframe = read_dataset_optimized_rows(dataset_name, rows_input = request.json.get('rows'))
+            data_dataframe = read_dataset_optimized(dataset_name, rows_input = request.json.get('rows'))
     else:
         data_dataframe = read_dataset(dataset_name)
 
@@ -124,31 +124,8 @@ def read_dataset_optimized(dataset_name, row_input = None, rows_input = None):
     paths = dataset_info['data_files']
     rows = dataset_info['rows']
 
-    # determine the partition
-    #index = first_true_element()
-    rows = [list(x.keys())[0] for x in rows]
-    index = first_true_element([row_input < i for i in rows])
-
-    dataframe = read_one_csv(paths[index], dataset_info)
-
-    #for path in paths[0:]:
-    #    df1 = dataframe
-    #    df2 = read_one_csv(path, dataset_info)
-    #    dataframe = pandas.concat([df1, df2], ignore_index=True) # ignore index to reindex
-
-    dataframe.columns = dataset_info['columns']
-
-    start = 0 if index == 0 else rows[index - 1]
-    end = rows[index]
-
-    dataframe.index = range(start, end)
-    return dataframe
-
-def read_dataset_optimized_rows(dataset_name, row_input = None, rows_input = None):
-    # first we search in the dataset configurations
-    dataset_info = current_app.config['DATASET_METADATA'][dataset_name]
-    paths = dataset_info['data_files']
-    rows = dataset_info['rows']
+    if row_input is not None:
+        rows_input = [row_input, row_input]
 
     first_row, last_row = rows_input
 
