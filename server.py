@@ -17,7 +17,7 @@ import time
 app = Flask(__name__)
 
 def get_dataset_metadata_form_name(name):
-    return current_app.config['DATASET_METADATA'][name]
+    return current_app.dataset_metadatas[name]
 
 @app.route("/datasets/<dataset_name>", methods = ["GET"])
 def get_dataset(dataset_name):
@@ -92,17 +92,16 @@ def get_number_of_rows(dataset_name):
 
 @app.route("/datasets")
 def datasets():
-    names = list(current_app.config["DATASET_METADATA"].keys())
+    names = list(current_app.dataset_metadatas.keys())
     response = json.dumps(names)
     return response
 
-# we use app.config to save the dataset metadata as a "global variable"
-# we tried using a python's global variable, but it doesn't get updated by the SIGHUP handler, probably because of Flask's internal threads and processes
-app.config['DATASET_METADATA'] = server_init.init()
+with app.app_context():
+    current_app.dataset_metadatas = server_init.init()
 
 def sighup_handler(signum, frame):
     with app.app_context():
-        current_app.config["DATASET_METADATA"] = server_init.init()
+        current_app.dataset_metadatas = server_init.init()
         print('Reloading')
 
 signal.signal(signal.SIGHUP, sighup_handler)
