@@ -102,7 +102,7 @@ app.config['DATASET_METADATA'] = server_init.init()
 
 def sighup_handler(signum, frame):
     with app.app_context():
-        current_app.config["DATASET_METADATA"] = init()
+        current_app.config["DATASET_METADATA"] = server_init.init()
         print('Reloading')
 
 signal.signal(signal.SIGHUP, sighup_handler)
