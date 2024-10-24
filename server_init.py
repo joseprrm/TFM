@@ -1,9 +1,11 @@
 import os
 import yaml
 import pandas
-from utils import is_number, get_extension
-from icecream import ic 
 import glob
+from icecream import ic 
+
+import index
+from utils import is_number, get_extension
 
 def generate_column_names(dataframe):
     columns = []
@@ -133,7 +135,9 @@ def init():
 
         if dataset_metadata.get('optimized') == True:
             complete_paths_in_index(dataset_metadata)
+            dataset_metadata['index_raw'] = dataset_metadata['index']
+            dataset_metadata['index'] = index.Index(dataset_metadata['index_raw'])
 
 
-    #ic(dataset_metadatas['big_csv_int_1g_split'])
+    ic(dataset_metadatas['big_csv_int_1g_split'])
     return dataset_metadatas
