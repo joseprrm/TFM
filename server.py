@@ -7,7 +7,6 @@ from flask import request
 
 import server_init
 import serialization
-import read_dataset
 
 # for debug
 from icecream import ic
@@ -21,13 +20,13 @@ def get_dataset_metadata_form_name(name):
 
 @app.route("/datasets/<dataset_name>", methods = ["GET"])
 def get_dataset(dataset_name):
-    dataset_metadata = get_dataset_metadata_form_name(dataset_name)
+    dataset = current_app.dataset[dataset_name]
 
-    optimized = dataset_metadata.get('optimized')
+    optimized = dataset.optimized
     if optimized:
-        dataframe = read_dataset.read_dataset_optimized(dataset_metadata, row_input = request.json.get('row'), rows_input = request.json.get('rows'))
+        dataframe = dataset.read_optimized(row_input = request.json.get('row'), rows_input = request.json.get('rows'))
     else:
-        dataframe = read_dataset.read_dataset(dataset_metadata)
+        dataframe = dataset.read()
 
     if request.json.get('random') == True:
         if request.json.get('number_of_samples'):
@@ -58,46 +57,44 @@ def get_dataset(dataset_name):
 
 @app.route("/datasets/<dataset_name>/column_names", methods = ["GET"])
 def get_column_names(dataset_name):
-    dataset_metadata = get_dataset_metadata_form_name(dataset_name)
-    column_names = dataset_metadata['columns']
+    dataset = current_app.dataset[dataset_name]
+    column_names = dataset.columns
     response = json.dumps(column_names)
     return response
 
 @app.route("/datasets/<dataset_name>/number_of_rows", methods = ["GET"])
 def get_number_of_rows(dataset_name):
-    dataset_metadata = get_dataset_metadata_form_name(dataset_name)
+    dataset = current_app.dataset[dataset_name]
 
-    number_of_rows = None
-    if tmp := dataset_metadata.get('number_of_rows'):
+    if tmp := dataset.number_of_rows:
         # if it is present in the metadata, use it
         number_of_rows = int(tmp)
     else:
         # else, calculate it by counting the lines
 
-        paths = dataset_metadata['data_files']
 
         number_of_rows = 0
-        for path in paths:
+        for path in dataset.paths:
             with open(path, 'rt') as f:
                 for line in f:
                     number_of_rows += 1
-        if dataset_metadata.get('header_in_file') == True:
-            number_of_rows = number_of_rows - 1*len(paths)
+        if dataset.header_in_file == True:
+            number_of_rows = number_of_rows - 1*len(dataset.paths)
 
         # "cache" it
-        dataset_metadata['number_of_rows'] = number_of_rows
+        dataset.number_of_rows = number_of_rows
 
-    response = json.dumps(number_of_rows)
+    response = json.dumps(dataset.number_of_rows)
     return response
 
 @app.route("/datasets")
 def datasets():
-    names = list(current_app.dataset_metadatas.keys())
+    names = list(current_app.dataset.keys())
     response = json.dumps(names)
     return response
 
 with app.app_context():
-    current_app.dataset_metadatas = server_init.init()
+    current_app.dataset = server_init.init()
 
 def sighup_handler(signum, frame):
     with app.app_context():
