@@ -4,6 +4,8 @@ import base64
 import zlib
 import pandas
 
+from utils import ProgrammingError
+
 def serialize(data, method):
     match method:
         case 'pickle_base64':
@@ -15,7 +17,7 @@ def serialize(data, method):
         case 'json':
             data_serialized = _serialize_json(data)
         case _:
-            raise Exception("PROGRAMMING ERROR")
+            raise ProgrammingError()
     return data_serialized
 
 def _serialize_pickle_base64(data):

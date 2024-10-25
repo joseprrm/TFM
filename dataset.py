@@ -1,8 +1,9 @@
-import pandas
 import utils
 import os
 
 from icecream import ic
+
+import pandas
 
 import index
 
@@ -22,7 +23,6 @@ class Dataset():
         else:
             self.config = {}
 
-
         if filenames := self.config.get('data_files'):
             filenames = utils.put_in_list_if_not_a_list(filenames)
             paths = map(self.prepend_directory_path_if_needed, filenames)
@@ -31,22 +31,29 @@ class Dataset():
             paths = self.get_csv_paths_from_filesystem()
         self.paths = list(paths)
 
-        self.header_in_file = tmp if ((tmp := self.config.get('header_in_file')) is not None) else self.figure_out_header_in_file()
+        # header_in_file
+        if (tmp := self.config.get('header_in_file')) is not None:
+            self.header_in_file = tmp 
+        else: 
+            self.header_in_file = self.figure_out_header_in_file()
+
         self.columns = tmp if (tmp := self.config.get('columns')) else self.figure_out_columns()
+
         self.optimized = tmp if (tmp := self.config.get('optimized')) else False
 
-        # it can be None. If it is calculated at some point, save it here, beacause it shouldn't change
+        # if it is calculated at some point, save it here, beacause it shouldn't change
+        # it can be None 
         self.number_of_rows = self.config.get('number_of_rows')
 
         if self.optimized:
             last_rows = self.config['index'].keys()
             filenames = self.config['index'].values()
             paths = map(self.prepend_directory_path_if_needed, filenames)
-            _dict = dict(zip(last_rows, paths)) 
-            self.index = index.Index(_dict)
+            index_with_paths = dict(zip(last_rows, paths))
+            self.index = index.Index(index_with_paths)
 
     def figure_out_columns(self):
-        if self.header_in_file == True:
+        if self.header_in_file is True:
             dataframe = pandas.read_csv(self.paths[0], header=0, nrows=0)
             return list(dataframe.columns)
         else:
@@ -56,12 +63,12 @@ class Dataset():
     def figure_out_header_in_file(self):
         # read the first line as the header
         dataframe = pandas.read_csv(self.paths[0], header=0, nrows=0)
-        if any([utils.is_number(column) for column in dataframe.columns]):
+        if any((utils.is_number(column) for column in dataframe.columns)):
             return False
-        else: 
+        else:
             return True
 
-    def get_csv_paths_from_filesystem(self): 
+    def get_csv_paths_from_filesystem(self):
         filenames = os.listdir(self.directory_path)
         filenames = [filename for filename in filenames if utils.get_extension(filename) == ".csv"]
         # sorted needed to get the correct order of the files
@@ -75,7 +82,7 @@ class Dataset():
             return file
 
     def read_one_csv(self, path):
-        if self.header_in_file == False:
+        if self.header_in_file is False:
             dataframe = pandas.read_csv(path, header=None)
         else:
             dataframe = pandas.read_csv(path)

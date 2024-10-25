@@ -1,6 +1,6 @@
 import utils
 
-class Index(): 
+class Index():
     """
     Index data structure:
         The index data structure is a dict, but is not used as such.
@@ -40,7 +40,7 @@ class Index():
         first_row_idx = self.find_partition_idx(first_row)
         last_row_idx = self.find_partition_idx(last_row)
 
-        # +1 because we also want the last partition 
+        # +1 because we also want the last partition
         paths = [self.paths[i] for i in range(first_row_idx, last_row_idx + 1)]
 
         # start is 0 if first partition is the first of the dataset

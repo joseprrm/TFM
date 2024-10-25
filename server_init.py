@@ -1,6 +1,5 @@
 import os
 import yaml
-from icecream import ic 
 
 import dataset
 
@@ -19,12 +18,10 @@ def init():
                     pass
                 else:
                     name = directory_name
-        except FileNotFoundError as e:
+        except FileNotFoundError:
             config = {}
             name = directory_name
 
         datasets[name] = dataset.Dataset(config, directory_path, name)
 
     return datasets
-
-    return dataset_metadatas
