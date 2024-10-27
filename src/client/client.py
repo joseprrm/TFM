@@ -1,10 +1,13 @@
-import requests
+from io import StringIO
+import zlib
 import pickle
 import json
 import base64
+import requests
 import pandas
 from icecream import ic
-from io import StringIO
+
+from utils import ProgrammingError
 
 # for scikit learn
 class LazyFloat:
@@ -39,11 +42,15 @@ class ILocIndexer():
     def __getitem__(self, key):
         match key:
             case slice():
-                return self.dataset.client.read_csv(self.dataset.name, rows=(key.start, key.stop), step=key.step, columns = self.dataset.columns_filter)
+                return self.dataset.client.read_csv(self.dataset.name,
+                                                    rows=(key.start, key.stop), step=key.step,
+                                                    columns = self.dataset.columns_filter)
             case int():
-                return self.dataset.client.read_csv(self.dataset.name, row=key, columns = self.dataset.columns_filter)
+                return self.dataset.client.read_csv(self.dataset.name,
+                                                    row=key,
+                                                    columns = self.dataset.columns_filter)
             case _:
-                raise Exception('PROGRAMMING ERROR')
+                raise ProgrammingError
 
 
 class DatasetIterator():
@@ -54,7 +61,9 @@ class DatasetIterator():
 
     def __next__(self):
         if self.index < self.number_of_rows:
-            tmp = self.dataset.client.read_csv(self.dataset.name, row=self.index, columns=self.dataset.columns_filter)
+            tmp = self.dataset.client.read_csv(self.dataset.name,
+                                               row=self.index,
+                                               columns=self.dataset.columns_filter)
             self.index += 1
             return tmp
         else:
@@ -67,7 +76,7 @@ class DatasetRowIterator():
         self.row_last = row_last
         self.columns = columns
 
-        self.index = row_first 
+        self.index = row_first
 
     def __iter__(self):
         return self
@@ -113,7 +122,8 @@ class Dataset():
         self.columns_filter = None
 
     def get_random_sample(self, number_of_samples=1):
-        return self.client.read_csv(self.name, random=True, number_of_samples=number_of_samples, columns = self.columns_filter)
+        return self.client.read_csv(self.name, random=True, number_of_samples=number_of_samples,
+                                    columns = self.columns_filter)
 
     def __getitem__(self, selector):
         """
@@ -164,7 +174,9 @@ class Dataset():
         if isinstance(rows, int):
             selection = self.client.read_csv(self.name, row=rows, columns=columns)
         else:
-            selection = self.client.read_csv(self.name, rows=(rows.start, rows.stop, rows.step), columns=columns)
+            selection = self.client.read_csv(self.name,
+                                             rows=(rows.start, rows.stop, rows.step),
+                                             columns=columns)
         return  selection
 
     def prova_scikit_learn(self, columns, r1, r2):
@@ -175,7 +187,9 @@ class Dataset():
         for i in range(r1, r2):
             inner_list = []
             for column in columns:
-                inner_list.append(LazyFloat(self.client.read_csv,{'row':i, 'column':column}, self.name))
+                inner_list.append(LazyFloat(self.client.read_csv,
+                                            {'row':i, 'column':column},
+                                            self.name))
 
             outer_list.append(inner_list)
 
@@ -183,7 +197,7 @@ class Dataset():
         if len(outer_list[0]) == 1:
             result = [x[0] for x in outer_list]
         else:
-            result = outer_list 
+            result = outer_list
         return result
 
 #    def __repr__(self):
@@ -205,7 +219,7 @@ class Client():
             case "json":
                 return ClientJSON(*args)
             case _:
-                raise Exception("PROGRAMMING ERROR")
+                raise ProgrammingError
 
     def __init__(self, server_address, server_port):
         """
@@ -231,7 +245,8 @@ class Client():
         """
         url = f"{self.base_url}/datasets/{dataset_name}"
 
-        # This deletes the elements that are None, so that we don't send them to the server in the json
+        # This deletes the elements that are None,
+        # so that we don't send them to the server in the json
         query = {k:v for k,v in kwargs.items() if v is not None}
         query = self.add_method(query)
 
@@ -300,7 +315,6 @@ class ClientPickle(Client):
         query['method'] = 'pickle'
         return query
 
-import zlib
 class ClientPickleCompressed(Client):
     def deserialize(self, response):
         # we take the raw bytes in the http payload
