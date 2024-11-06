@@ -264,7 +264,6 @@ class Client():
         query['method'] = 'pickle_base64'
         return query
 
-
     def deserialize(self, response):
         data_pickled = base64.b64decode(response.text)
         data = pickle.loads(data_pickled)

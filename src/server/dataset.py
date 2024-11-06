@@ -52,6 +52,8 @@ class Dataset():
             index_with_paths = dict(zip(last_rows, paths))
             self.index = index.Index(index_with_paths)
 
+        self.partition_cache = {}
+
     def figure_out_columns(self):
         if self.header_in_file is True:
             dataframe = pandas.read_csv(self.paths[0], header=0, nrows=0)
@@ -82,10 +84,15 @@ class Dataset():
             return file
 
     def read_one_csv(self, path):
+        if (tmp := self.partition_cache.get(path)) is not None:
+            return tmp
+
+        print(path)
         if self.header_in_file is False:
             dataframe = pandas.read_csv(path, header=None)
         else:
             dataframe = pandas.read_csv(path)
+        self.partition_cache[path] = dataframe
         return dataframe
 
     def read_multiple_csv(self, paths):

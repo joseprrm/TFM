@@ -1,11 +1,13 @@
 import os
 import signal
 import json
+import threading
 
 # for debug
 import time
 from icecream import ic
 
+import websockets
 from flask import Flask, current_app
 from flask import request
 
@@ -15,42 +17,55 @@ import serialization
 
 app = Flask(__name__)
 
+#import logging
+#log = logging.getLogger('werkzeug')
+#log.setLevel(logging.ERROR)
+
+def foo(dataset, query):
+    optimized = dataset.optimized
+    if optimized:
+        dataframe = dataset.read_optimized(row_input = query.get('row'),
+                                           rows_input = query.get('rows'))
+    else:
+        dataframe = dataset.read()
+
+    if query.get('random') is True:
+        if query.get('number_of_samples'):
+            dataframe = dataframe.sample(query.get('number_of_samples'))
+        else:
+            dataframe = dataframe.sample(1)
+    if query.get('column'):
+        dataframe = dataframe[query['column']]
+    if query.get('columns'):
+        dataframe = dataframe[query['columns']]
+    if query.get('rows') :
+        step = None
+        if query.get('step'):
+            step = query.get('step')
+        else:
+            step = 1
+        # -1 to make it not include the last number
+        dataframe = dataframe.loc[query["rows"][0]:(query["rows"][1] - 1):step]
+        # Reindex to give a Series/DataFrame with indexes starting from 0
+        dataframe = dataframe.reset_index(drop=True)
+
+    if query.get('row') is not None:
+        dataframe = dataframe.loc[query["row"]]
+
+    return dataframe
+
+
+#    data_serialized = serialization.serialize(0, request.json.get('method'))
+#    return data_serialized
 @app.route("/datasets/<dataset_name>", methods = ["GET"])
 def get_dataset(dataset_name):
     dataset = current_app.dataset[dataset_name]
 
-    optimized = dataset.optimized
-    if optimized:
-        dataframe = dataset.read_optimized(row_input = request.json.get('row'),
-                                           rows_input = request.json.get('rows'))
-    else:
-        dataframe = dataset.read()
-
-    if request.json.get('random') is True:
-        if request.json.get('number_of_samples'):
-            dataframe = dataframe.sample(request.json.get('number_of_samples'))
-        else:
-            dataframe = dataframe.sample(1)
-    if request.json.get('column'):
-        dataframe = dataframe[request.json['column']]
-    if request.json.get('columns'):
-        dataframe = dataframe[request.json['columns']]
-    if request.json.get('rows') :
-        step = None
-        if request.json.get('step'):
-            step = request.json.get('step')
-        else:
-            step = 1
-        # -1 to make it not include the last number
-        dataframe = dataframe.loc[request.json["rows"][0]:(request.json["rows"][1] - 1):step]
-        # Reindex to give a Series/DataFrame with indexes starting from 0
-        dataframe = dataframe.reset_index(drop=True)
-
-    if request.json.get('row') is not None:
-        dataframe = dataframe.loc[request.json["row"]]
+    query = request.json
+    #ic(query)
+    dataframe = foo(dataset, query)
 
     data_serialized = serialization.serialize(dataframe, request.json.get('method'))
-
     return data_serialized
 
 @app.route("/datasets/<dataset_name>/column_names", methods = ["GET"])
