@@ -86,39 +86,24 @@ class TestDataset(unittest.TestCase):
         self.ds_columns_X = self._client.get_dataset('iris_test_no_header')
 
     def test_column_1(self):
-        for e1, e2 in zip(list(self.ds_columns_col.columns), ["col1", "col2", "col3", "col4", "species"]):
-            self.assertEqual(e1, e2)
+        self.assertListEqual(list(self.ds_columns_col.columns), ["col1", "col2", "col3", "col4", "species"])
 
-        for e1, e2 in zip(list(self.ds_columns_X.columns), ["X0", "X1", "X2", "X3", "X4"]):
-            self.assertEqual(e1, e2)
+        self.assertListEqual(list(self.ds_columns_X.columns), ["X0", "X1", "X2", "X3", "X4"])
 
-        for e1, e2 in zip(list(self.ds.columns), ["sepal_length", "sepal_width", "petal_length", "petal_width", "species"]):
-            self.assertEqual(e1, e2)
+        self.assertListEqual(list(self.ds.columns), ["sepal_length", "sepal_width", "petal_length", "petal_width", "species"])
 
-        for e1, e2 in zip(list(self.ds_columns_col.iloc[0:2].columns), ["col1", "col2", "col3", "col4", "species"]):
-            self.assertEqual(e1, e2)
+        self.assertListEqual(list(self.ds_columns_col.iloc[0:2].columns), ["col1", "col2", "col3", "col4", "species"])
 
-        for e1, e2 in zip(list(self.ds_columns_X.iloc[0:2].columns), ["X0", "X1", "X2", "X3", "X4"]):
-            self.assertEqual(e1, e2)
+        self.assertListEqual(list(self.ds_columns_X.iloc[0:2].columns), ["X0", "X1", "X2", "X3", "X4"])
 
-        for e1, e2 in zip(list(self.ds.iloc[0:2].columns), ["sepal_length", "sepal_width", "petal_length", "petal_width", "species"]):
-            self.assertEqual(e1, e2)
+        self.assertListEqual(list(self.ds.iloc[0:2].columns), ["sepal_length", "sepal_width", "petal_length", "petal_width", "species"])
 
     def test_iteration(self):
         self.assertEqual(len([x for x in self.ds_small]), 3)
 
-        for i, e in enumerate(self.ds_small):
-            if i == 0:
-                self.assertEqual(e.species, "virginica")
-                self.assertEqual(e.sepal_length, 5.9)
-            elif i == 1:
-                self.assertEqual(e.species, "setosa")
-                self.assertEqual(e.sepal_length, 4.6)
-            elif i == 2:
-                self.assertEqual(e.species, "versicolor")
-                self.assertEqual(e.sepal_length, 5.6)
-            else:
-                self.fail()
+        result = [(e.species, e.sepal_length) for e in self.ds_small]
+        expect = [("virginica", 5.9), ("setosa", 4.6), ("versicolor", 5.6)]
+        self.assertListEqual(expect, result)
 
     def test_getitem_str(self):
         data = self.ds["species"]
@@ -177,16 +162,14 @@ class TestDataset(unittest.TestCase):
     def test_getitem_range_list_of_str(self):
         data = self.ds[range(3, 5), ["species", "sepal_length"]]
         self.assertIsInstance(data, pd.core.frame.DataFrame)
-        for e1, e2 in zip(data.species, ["setosa", "virginica"]):
-            self.assertEqual(e1, e2)
+        self.assertListEqual(list(data.species), ["setosa", "virginica"])
         with self.assertRaises(AttributeError):
             data.sepal_width
 
     def test_getitem_range_with_step_list_of_str(self):
         data = self.ds[range(1, 10, 3), ["species", "sepal_length"]]
         self.assertIsInstance(data, pd.core.frame.DataFrame)
-        for e1, e2 in zip(data.species, ["setosa", "virginica", "setosa"]):
-            self.assertEqual(e1, e2)
+        self.assertListEqual(list(data.species), ["setosa", "virginica", "setosa"])
         with self.assertRaises(AttributeError):
             data.sepal_width
 
@@ -194,8 +177,7 @@ class TestDataset(unittest.TestCase):
     def test_iloc(self):
         self.assertEqual(self.ds.iloc[0].species, "virginica")
         self.assertEqual(self.ds.iloc[1].species, "setosa")
-        for e1, e2 in zip(self.ds.iloc[2:5].species, ["versicolor", "setosa", "virginica"]):
-            self.assertEqual(e1, e2)
+        self.assertListEqual(list(self.ds.iloc[2:5].species), ["versicolor", "setosa", "virginica"])
 
         self.assertTrue(self.ds.iloc[0:10].equals(self.ds.iloc[0:10]))
 
@@ -203,8 +185,7 @@ class TestDataset(unittest.TestCase):
         self.ds.use_columns('species')
         self.assertEqual(self.ds.iloc[0], "virginica")
         self.assertEqual(self.ds.iloc[1], "setosa")
-        for e1, e2 in zip(self.ds.iloc[2:5], ["versicolor", "setosa", "virginica"]):
-            self.assertEqual(e1, e2)
+        self.assertListEqual(list(self.ds.iloc[2:5]), ["versicolor", "setosa", "virginica"])
 
         self.ds.use_columns(['species', 'sepal_width'])
         self.assertEqual(self.ds.iloc[0].species, "virginica")
@@ -221,15 +202,13 @@ class TestDataset(unittest.TestCase):
         self.assertEqual(self.ds.iloc[14].petal_width, 1.2)
 
     def test_row_iteration(self):
-        for e1, e2 in zip([x.species for x in self.ds.row_iterator(0, 3)], ["virginica", "setosa", "versicolor"]):
-            self.assertEqual(e1, e2)
+        self.assertListEqual([x.species for x in self.ds.row_iterator(0, 3)], ["virginica", "setosa", "versicolor"])
 
         data = [x for x in self.ds.row_iterator(0, 3)]
 
     def test_row_iteration_use_columns(self):
         self.ds.use_columns(['species', 'petal_length'])
-        for e1, e2 in zip([x.species for x in self.ds.row_iterator(0, 3)], ["virginica", "setosa", "versicolor"]):
-            self.assertEqual(e1, e2)
+        self.assertListEqual([x.species for x in self.ds.row_iterator(0, 3)], ["virginica", "setosa", "versicolor"])
 
         [x.species for x in self.ds.row_iterator(0, 3)]
         [x.petal_length for x in self.ds.row_iterator(0, 3)]

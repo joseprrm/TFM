@@ -30,10 +30,9 @@ class TestDataset(unittest.TestCase):
 
     def test_multiple_files_config_glob_in_list_multiple(self):
         self.assertEqual(len([x for x in self.ds_multiple_files_config_glob_in_list_multiple]), 18)
-        _list1 = ["setosa"] * 3 + ["virginica"] * 3 + ["versicolor"] * 3 + ["versicolor", "setosa", "setosa"]+ [ "setosa", "versicolor", "setosa"]+ ["setosa", "setosa", "versicolor"]
-        _list2 = [x.species for x in self.ds_multiple_files_config_glob_in_list_multiple]
-        for e1, e2 in zip(_list1, _list2):
-            self.assertEqual(e1, e2)
+        result = [x.species for x in self.ds_multiple_files_config_glob_in_list_multiple]
+        expect = ["setosa"] * 3 + ["virginica"] * 3 + ["versicolor"] * 3 + ["versicolor", "setosa", "setosa"]+ [ "setosa", "versicolor", "setosa"]+ ["setosa", "setosa", "versicolor"]
+        self.assertListEqual(result, expect)
 
 if __name__ == '__main__':
     unittest.main()
