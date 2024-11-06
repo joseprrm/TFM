@@ -1,0 +1,12 @@
+dataset:
+  header_in_file: true
+  index:
+    10000: 00000.csv
+    20000: 00001.csv
+    30000: 00002.csv
+    40000: 00003.csv
+    49999: 00004.csv
+  name: big_csv_int_1g_split
+  number_of_rows: 49999
+  optimized: true
+

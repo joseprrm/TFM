@@ -306,12 +306,12 @@ class TestDatasetOptimized(unittest.TestCase):
         self.assertEqual(self.dataset_nosplit[0, "Z"], self.dataset_split[0, "Z"] )
 
         # random row
-        self.assertTrue(self.dataset_nosplit[123456].equals(self.dataset_split[123456]))
+        self.assertTrue(self.dataset_nosplit[23456].equals(self.dataset_split[23456]))
         
         # limits of a partition
-        self.assertTrue(self.dataset_nosplit[209999].equals(self.dataset_split[209999]))
-        self.assertTrue(self.dataset_nosplit[210000].equals(self.dataset_split[210000]))
-        self.assertTrue(self.dataset_nosplit[210001].equals(self.dataset_split[210001]))
+        self.assertTrue(self.dataset_nosplit[29999].equals(self.dataset_split[29999]))
+        self.assertTrue(self.dataset_nosplit[30000].equals(self.dataset_split[30000]))
+        self.assertTrue(self.dataset_nosplit[30001].equals(self.dataset_split[30001]))
         
         # last row
         last_row = self.dataset_nosplit.number_of_rows() - 1
@@ -321,13 +321,13 @@ class TestDatasetOptimized(unittest.TestCase):
         # same partition
         self.assertTrue(self.dataset_nosplit[range(0, 10), "Z"].equals(self.dataset_split[range(0, 10), "Z"]))
 
-        self.assertTrue(self.dataset_nosplit[range(0, 123456), "Z"].equals(self.dataset_split[range(0, 123456), "Z"]))
+        self.assertTrue(self.dataset_nosplit[range(0, 23456), "Z"].equals(self.dataset_split[range(0, 23456), "Z"]))
 
-        self.assertEqual(len(self.dataset_nosplit[range(0, 123456), "Z"]), 123456)
+        self.assertEqual(len(self.dataset_nosplit[range(0, 23456), "Z"]), 23456)
 
     def test_correct_concat(self):
-        ds1 = self.dataset_split[range(23456, 123456), "Z"]
-        ds2 = self.dataset_split[range(23456, 23456 + 10), "Z"]
+        ds1 = self.dataset_split[range(13456, 33456), "Z"]
+        ds2 = self.dataset_split[range(13456, 33456 + 10), "Z"]
 
         self.assertTrue(ds1.iloc[0:10].equals(ds2.iloc[0:10]))
 
