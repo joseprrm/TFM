@@ -10,7 +10,6 @@ if [[ "${command}" == init ]]; then
    	fi 
 	source venv/bin/activate
     pip install -e .
-    pip install -r requirements.txt
 elif [[ "${command}" == server ]]; then
 	flask --app src/server/server --debug run
 elif [[ "${command}" == test ]]; then
