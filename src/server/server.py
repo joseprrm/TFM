@@ -120,5 +120,8 @@ signal.signal(signal.SIGHUP, sighup_handler)
 with open('/tmp/tfmpid', 'wt') as f:
     f.write(str(os.getpid()))
 
+import server_websocket
+server_websocket.start()
+
 if __name__ == '__main__':
     app.run()
