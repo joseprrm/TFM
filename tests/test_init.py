@@ -1,16 +1,15 @@
 import sys
 import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src/client/')))
 
 import unittest
 from icecream import ic
 import pandas as pd
 
-from client import Client, ClientJSON
+from client import Client
 
 class TestDataset(unittest.TestCase):
     def setUp(self):
-        _client = ClientJSON("127.0.0.1", 5000)
+        _client = Client.get_client("127.0.0.1", 5000, method="json")
         self.ds_multiple_files_no_config = _client.get_dataset('test_multiple_files_no_config')
         self.ds_multiple_files_config = _client.get_dataset('test_multiple_files_config')
         self.ds_multiple_files_config_glob = _client.get_dataset('test_multiple_files_config_glob')

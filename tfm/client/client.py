@@ -1,4 +1,4 @@
-from io import StringIO
+import io
 import zlib
 import pickle
 import json
@@ -293,9 +293,9 @@ class ClientJSON(Client):
             case ["builtin", _json]:
                 data = json.loads(_json)
             case ["dataframe", _json]:
-                data = pandas.read_json(StringIO(_json), typ = 'frame')
+                data = pandas.read_json(io.StringIO(_json), typ = 'frame')
             case ["series", _json]:
-                data = pandas.read_json(StringIO(_json), typ = 'series')
+                data = pandas.read_json(io.StringIO(_json), typ = 'series')
             case _:
                 raise Exception("PROGRAMMING ERROR")
         return data

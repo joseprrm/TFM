@@ -7,13 +7,12 @@ import threading
 import time
 from icecream import ic
 
-import websockets
 from flask import Flask, current_app
 from flask import request
+import websockets
 
 import server_init
 import serialization
-
 
 app = Flask(__name__)
 

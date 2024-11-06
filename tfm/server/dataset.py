@@ -1,11 +1,10 @@
-import utils
 import os
 
+import pandas
 from icecream import ic
 
-import pandas
-
 import index
+import utils
 
 def generate_column_names(number_of_columns):
     columns = []

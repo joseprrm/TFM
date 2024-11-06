@@ -4,7 +4,7 @@ import pickle
 
 from websockets.sync.client import connect
 
-from client.client import Client
+from .client import Client
 
 class ClientWebsocket(Client):
     def __init__(self, *args):
