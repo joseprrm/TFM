@@ -5,8 +5,8 @@ dataset:
     20000: 00001.csv
     30000: 00002.csv
     40000: 00003.csv
-    49999: 00004.csv
+    50000: 00004.csv
   name: big_csv_int_1g_split
-  number_of_rows: 49999
+  number_of_rows: 50000
   optimized: true
 
