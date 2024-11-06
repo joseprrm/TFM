@@ -250,15 +250,15 @@ class Client():
         query = {k:v for k,v in kwargs.items() if v is not None}
         query = self.add_method(query)
 
-        if query:
-            response = requests.get(url, json=query)
-        else:
-            response = requests.get(url)
+        petition = (url, query)
+        response = self.make_petition(petition)
 
-        #ic(f"{len(response.content)} bytes")
-        #ic(f"{len(response.content)/1024/1024} megabytes")
         contents = self.deserialize(response)
         return contents
+
+    def make_petition(self, petition):
+        url, query = petition
+        return requests.get(url, json=query)
 
     def add_method(self, query):
         query['method'] = 'pickle_base64'
