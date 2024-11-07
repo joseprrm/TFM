@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from icecream import ic
 import requests
 from websockets.sync.client import connect
+import socket
 
 class Channel(ABC):
     @abstractmethod
@@ -41,4 +42,24 @@ class WebsocketChannel(Channel):
     def close(self):
         self.websocket.close()
 
-mapping = {'http': HTTPChannel, 'websocket': WebsocketChannel}
+class TCPChannel(Channel):
+    def __init__(self):
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        ip="127.0.0.1"
+        port=8000
+        self.socket.connect((ip, port))
+        #ic('connect socket')
+
+    def make_petition(self, petition):
+        # just ignore the url
+        url, query = petition
+        self.socket.sendall(json.dumps(query).encode('utf-8'))
+        response = self.socket.recv(4096)
+        return response
+
+    def close(self):
+        #ic('Closing client socket')
+        self.socket.close()
+
+
+mapping = {'http': HTTPChannel, 'websocket': WebsocketChannel, 'tcp': TCPChannel}

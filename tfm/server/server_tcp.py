@@ -10,19 +10,24 @@ import serialization
 
 class RequestHandler(socketserver.BaseRequestHandler):
     def handle(self):
-        with app.app_context():
-            self.data = self.request.recv(10000)
-            
-            query = json.loads(self.data)
+        while True:
+            with app.app_context():
+                self.data = self.request.recv(4096)
+                if self.data == b'':
+                    break
+                
+                query = json.loads(self.data)
+                #ic(query)
 
-            dataset = current_app.dataset[query['dataset_name']]
-            dataframe = process_query(dataset, query)
-            data_serialized = serialization.mapping[query['method']]().serialize(dataframe)
+                dataset = current_app.dataset[query['dataset_name']]
+                dataframe = process_query(dataset, query)
+                #ic(dataframe)
+                data_serialized = serialization.mapping[query['method']]().serialize(dataframe)
 
-            if isinstance(data_serialized, str):
-                data_serialized = bytes(data_serialized, 'utf-8')
+                if isinstance(data_serialized, str):
+                    data_serialized = bytes(data_serialized, 'utf-8')
 
-            self.request.sendall(data_serialized)
+                self.request.sendall(data_serialized)
 
 server = None
 def start():
@@ -38,6 +43,6 @@ def start():
 
 def shutdown():
     global server
-    ic("Shutdown tcp")
     server.shutdown()
     server.socket.close()
+    ic("Shutdown tcp")
