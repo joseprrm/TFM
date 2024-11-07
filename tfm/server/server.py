@@ -1,18 +1,16 @@
 import os
 import signal
 import json
-import threading
 
 # for debug
-import time
 from icecream import ic
 
 from flask import Flask, current_app
 from flask import request
-import websockets
+
+import serialization
 
 import server_init
-import serialization
 
 app = Flask(__name__)
 
@@ -20,7 +18,7 @@ app = Flask(__name__)
 #log = logging.getLogger('werkzeug')
 #log.setLevel(logging.ERROR)
 
-def foo(dataset, query):
+def process_query(dataset, query):
     optimized = dataset.optimized
     if optimized:
         dataframe = dataset.read_optimized(row_input = query.get('row'),
@@ -53,25 +51,23 @@ def foo(dataset, query):
 
     return dataframe
 
-
-#    data_serialized = serialization.serialize(0, request.json.get('method'))
-#    return data_serialized
 @app.route("/datasets/<dataset_name>", methods = ["GET"])
 def get_dataset(dataset_name):
     dataset = current_app.dataset[dataset_name]
 
     query = request.json
-    #ic(query)
-    dataframe = foo(dataset, query)
+    dataframe = process_query(dataset, query)
 
-    data_serialized = serialization.serialize(dataframe, request.json.get('method'))
+    data_serialized = serialization.mapping[query['method']]().serialize(dataframe)
     return data_serialized
 
 @app.route("/datasets/<dataset_name>/column_names", methods = ["GET"])
 def get_column_names(dataset_name):
+
     dataset = current_app.dataset[dataset_name]
     column_names = dataset.columns
     response = json.dumps(column_names)
+
     return response
 
 @app.route("/datasets/<dataset_name>/number_of_rows", methods = ["GET"])

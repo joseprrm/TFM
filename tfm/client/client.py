@@ -1,16 +1,9 @@
-import io
-import zlib
-import pickle
-import json
-import base64
 import requests
-import pandas
-from icecream import ic
 
 from utils import ProgrammingError
 
 from .dataset import Dataset
-from . import serialization
+import serialization
 from . import channel
 
 
@@ -56,6 +49,7 @@ class Client():
         # so that we don't send them to the server in the json
         query = {k:v for k,v in kwargs.items() if v is not None}
         query = self._add_method(query)
+        query["dataset_name"] = dataset_name
 
         petition = (url, query)
         response = self.channel.make_petition(petition)

@@ -1,6 +1,7 @@
 import json
 from abc import ABC, abstractmethod
 
+from icecream import ic
 import requests
 from websockets.sync.client import connect
 
@@ -31,12 +32,11 @@ class WebsocketChannel(Channel):
         url, query = petition
         self.websocket.send(json.dumps(query))
         response = self.websocket.recv()
+        # sometimes websocket.recv returns bytes, sometimes str
+        # encode if is a str
+        if isinstance(response, str):
+            response = response.encode('utf-8')
         return response
-
-    def deserialize(self, response):
-        data_pickled = base64.b64decode(response)
-        data = pickle.loads(data_pickled)
-        return data
 
     def close(self):
         self.websocket.close()
