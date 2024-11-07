@@ -3,11 +3,11 @@ import itertools
 
 from icecream import ic
 
-from client import ClientWebsocket
+from client import Client
 
 class TestA(unittest.TestCase):
     def setUp(self):
-        self.client = ClientWebsocket("127.0.0.1", 5000)
+        self.client = Client.get_client("127.0.0.1", 5000, method="websocket")
         self.ds = self.client.get_dataset('big_csv_int_1g_split')
 
     def tearDown(self):

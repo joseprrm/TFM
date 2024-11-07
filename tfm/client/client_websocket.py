@@ -11,7 +11,7 @@ class ClientWebsocket(Client):
         self.websocket = connect("ws://localhost:30004")
         super().__init__(*args)
 
-    def make_petition(self, petition):
+    def _make_petition(self, petition):
         # just ignore the url
         url, query = petition
         self.websocket.send(json.dumps(query))
