@@ -7,7 +7,7 @@ from client import Client
 
 class TestA(unittest.TestCase):
     def setUp(self):
-        self.client = Client.get_client("127.0.0.1", 5000, method="websocket")
+        self.client = Client.get_client("127.0.0.1", 5000, channel_method="websocket")
         self.ds = self.client.get_dataset('big_csv_int_1g_split')
 
     def tearDown(self):

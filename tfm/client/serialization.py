@@ -4,20 +4,25 @@ import json
 import zlib
 import pickle
 
-import pandas
+from abc import ABC, abstractmethod
 
-from icecream import ic
+import pandas
 
 from utils import ProgrammingError
 
-class PickleBase64Serializer():
+class Serializer(ABC):
+    @abstractmethod
+    def deserialize(self, data):
+        pass
+
+class PickleBase64Serializer(Serializer):
     def deserialize(self, response):
         text = response.decode('utf-8')
         data_pickled = base64.b64decode(text)
         data = pickle.loads(data_pickled)
         return data
 
-class JSONSerializer():
+class JSONSerializer(Serializer):
     def deserialize(self, response):
         data = None
         text = response.decode('utf-8')
@@ -32,14 +37,21 @@ class JSONSerializer():
                 raise ProgrammingError
         return data
 
-class PickleSerializer():
+class PickleSerializer(Serializer):
     def deserialize(self, response):
         # we take the raw bytes in the http payload
         data = pickle.loads(response)
         return data
 
-class PickleCompressedSerializer():
+class PickleCompressedSerializer(Serializer):
     def deserialize(self, response):
         # we take the raw bytes in the http payload
         data = pickle.loads(zlib.decompress(response))
         return data
+
+mapping = {
+    "pickle_base64": PickleBase64Serializer,
+    "pickle": PickleSerializer,
+    "pickle_compressed": PickleCompressedSerializer,
+    "json": JSONSerializer
+}

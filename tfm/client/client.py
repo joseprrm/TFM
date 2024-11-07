@@ -11,30 +11,21 @@ from utils import ProgrammingError
 
 from .dataset import Dataset
 from . import serialization
+from . import channel
 
 
+# TODO: context manager, using the close
 class Client():
     @classmethod
-    def get_client(cls, *args, method="pickle_base64"):
+    def get_client(cls, *args, method="pickle_base64", channel_method='http'):
         """
         Factory method to return different types of client.
         """
-        match method:
-            case "pickle_base64":
-                return Client(*args, method, serialization.PickleBase64Serializer())
-            case "pickle":
-                return Client(*args, method, serialization.PickleSerializer())
-            case "pickle_compressed":
-                return Client(*args, method, serialization.PickleCompressedSerializer())
-            case "json":
-                return Client(*args, method, serialization.JSONSerializer())
-            case "websocket":
-                from .client_websocket import ClientWebsocket
-                return ClientWebsocket(*args, "pickle_base64", serialization.PickleBase64Serializer())
-            case _:
-                raise ProgrammingError
+        serializer = serialization.mapping[method]()
+        _channel = channel.mapping[channel_method]()
+        return Client(*args, method, serializer, _channel)
 
-    def __init__(self, server_address, server_port, method, serializer):
+    def __init__(self, server_address, server_port, method, serializer, channel):
         """
         server_address: a string with the IP or hostname of the server
         server_port: intenger with the port number
@@ -44,6 +35,7 @@ class Client():
         self.base_url = f"http://{server_address}:{server_port}/"
         self.method = method
         self.serializer = serializer
+        self.channel = channel
 
     def get_dataset(self, dataset_name):
         return Dataset(dataset_name, self)
@@ -66,18 +58,17 @@ class Client():
         query = self._add_method(query)
 
         petition = (url, query)
-        response = self._make_petition(petition)
+        response = self.channel.make_petition(petition)
 
         contents = self.serializer.deserialize(response)
         return contents
 
-    def _make_petition(self, petition):
-        url, query = petition
-        return requests.get(url, json=query).content
-
     def _add_method(self, query):
         query['method'] = self.method
         return query
+
+    def close(self):
+        self.channel.close()
 
     def list_datasets(self):
         url = f"{self.base_url}/datasets"
