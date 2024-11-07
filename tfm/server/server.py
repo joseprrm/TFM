@@ -115,8 +115,20 @@ signal.signal(signal.SIGHUP, sighup_handler)
 with open('/tmp/tfmpid', 'wt') as f:
     f.write(str(os.getpid()))
 
-import server_websocket
-server_websocket.start()
-
 if __name__ == '__main__':
-    app.run()
+    try:
+        import server_websocket
+        server_websocket.start()
+
+        import server_tcp
+        server_tcp.start()
+        app.run()
+    except Exception:
+        # I don't know why it is not getting executed
+        # I tried running it with waitress, flask CLI and directly with python with app.run()
+        # I tried with flask debug mode on and off.  
+        print("EXCEPTION CATCHED. THIS IS NOT SHOWING UP")
+    finally:
+        # This does get executed
+        print('Exiting')
+        server_tcp.shutdown()

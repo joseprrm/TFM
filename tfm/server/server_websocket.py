@@ -4,7 +4,7 @@ import json
 
 from icecream import ic
 from flask import current_app
-from websockets.asyncio.server import serve
+import websockets.asyncio.server
 
 from server import app, process_query
 import serialization
@@ -22,11 +22,19 @@ async def callback(websocket):
 
 async def websocket_run():
     try:
-        async with serve(callback, "localhost", 30004):
+        print('Starting websocket')
+        async with websockets.asyncio.server.serve(callback, "localhost", 30004):
             await asyncio.get_running_loop().create_future()  # run forever
     except OSError:
-        pass
+        print('Websocket already started')
 
+stop_event = threading.Event()
 def start():
-    thread = threading.Thread(target=asyncio.run, args=(websocket_run(),))
+    # daemon=True makes the program stop and cleanup correctly with only one Ctrl-C 
+    # otherwise, this part of the program only stops with two Ctrl-C 
+    # the 
+    thread = threading.Thread(target=asyncio.run, args=(websocket_run(),), daemon=True)
     thread.start()
+
+def shutdown():
+    ic('Shutdown websocket')
