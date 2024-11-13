@@ -99,8 +99,6 @@ def datasets():
     response = json.dumps(names)
     return response
 
-with app.app_context():
-    current_app.dataset = server_init.init()
 
 def sighup_handler(signum, frame):
     with app.app_context():
@@ -127,7 +125,7 @@ def loop():
                     for path, value in dataset.partition_cache.items():
                         access_time = value[1]
                         difference = now - access_time
-                        if difference > 1:
+                        if difference > 20:
                             paths_to_delete.append(path)
 
                     for path in paths_to_delete:
@@ -138,15 +136,17 @@ def loop():
 
 if __name__ == '__main__':
     try:
+        with app.app_context():
+            current_app.dataset = server_init.init()
 
         thread = threading.Thread(target=loop, daemon=True)
         thread.start()
 
         import server_websocket
-        server_websocket.start()
+        server_websocket.start(app)
 
         import server_tcp
-        server_tcp.start()
+        server_tcp.start(app)
 
         import waitress
         waitress.serve(app, port=5000)

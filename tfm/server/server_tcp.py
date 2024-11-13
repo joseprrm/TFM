@@ -5,7 +5,7 @@ import json
 from icecream import ic
 from flask import current_app
 
-from server import app, process_query
+from server import process_query
 import serialization
 
 async def handle(reader, writer):
@@ -28,6 +28,7 @@ async def handle(reader, writer):
             writer.write(data_serialized)
             await writer.drain()
 
+
 async def tcp_run():
     print('Starting tcp server')
     server = await asyncio.start_server(
@@ -39,7 +40,10 @@ async def tcp_run():
     async with server:
         await server.serve_forever()
 
-def start():
+app = None
+def start(_app):
+    global app
+    app = _app
     # daemon=True makes the program stop and cleanup correctly with only one Ctrl-C 
     # otherwise, this part of the program only stops with two Ctrl-C 
     # the 

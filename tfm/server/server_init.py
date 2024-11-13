@@ -5,6 +5,7 @@ import yaml
 import dataset
 
 def init():
+    print("calling init()")
     datasets_base_path = './datasets'
     dataset_directory_names = os.listdir(datasets_base_path)
     dataset_directory_paths = [os.path.join(datasets_base_path, directory) for directory in dataset_directory_names]

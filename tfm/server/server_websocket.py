@@ -6,7 +6,7 @@ from icecream import ic
 from flask import current_app
 import websockets.asyncio.server
 
-from server import app, process_query
+from server import process_query
 import serialization
 
 async def callback(websocket):
@@ -28,8 +28,10 @@ async def websocket_run():
     except OSError:
         print('Websocket already started')
 
-stop_event = threading.Event()
-def start():
+app = None
+def start(_app):
+    global app
+    app = _app
     # daemon=True makes the program stop and cleanup correctly with only one Ctrl-C 
     # otherwise, this part of the program only stops with two Ctrl-C 
     # the 
