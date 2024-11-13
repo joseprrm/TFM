@@ -115,15 +115,40 @@ signal.signal(signal.SIGHUP, sighup_handler)
 with open('/tmp/tfmpid', 'wt') as f:
     f.write(str(os.getpid()))
 
+import time
+import threading
+def loop():
+    with app.app_context():
+        while True:
+            now = time.time()
+            for name, dataset in current_app.dataset.items():
+                if dataset.optimized is True:
+                    paths_to_delete = []
+                    for path, value in dataset.partition_cache.items():
+                        access_time = value[1]
+                        difference = now - access_time
+                        if difference > 1:
+                            paths_to_delete.append(path)
+
+                    for path in paths_to_delete:
+                        del dataset.partition_cache[path]
+
+            time.sleep(0.5)
+
+
 if __name__ == '__main__':
     try:
+
+        thread = threading.Thread(target=loop, daemon=True)
+        thread.start()
+
         import server_websocket
         server_websocket.start()
 
         import server_tcp
         server_tcp.start()
 
-        import waitress 
+        import waitress
         waitress.serve(app, port=5000)
     except Exception as e:
         print(e)
