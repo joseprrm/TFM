@@ -1,4 +1,4 @@
-import socketserver
+import asyncio
 import threading
 import json
 
@@ -8,41 +8,40 @@ from flask import current_app
 from server import app, process_query
 import serialization
 
-class RequestHandler(socketserver.BaseRequestHandler):
-    def handle(self):
-        while True:
-            with app.app_context():
-                self.data = self.request.recv(4096)
-                if self.data == b'':
-                    break
-                
-                query = json.loads(self.data)
-                #ic(query)
+async def handle(reader, writer):
+    while True:
+        with app.app_context():
+            data = await reader.read(4096)
 
-                dataset = current_app.dataset[query['dataset_name']]
-                dataframe = process_query(dataset, query)
-                #ic(dataframe)
-                data_serialized = serialization.mapping[query['method']]().serialize(dataframe)
+            if data == b'':
+                break
+            
+            query = json.loads(data)
 
-                if isinstance(data_serialized, str):
-                    data_serialized = bytes(data_serialized, 'utf-8')
+            dataset = current_app.dataset[query['dataset_name']]
+            dataframe = process_query(dataset, query)
+            data_serialized = serialization.mapping[query['method']]().serialize(dataframe)
 
-                self.request.sendall(data_serialized)
+            if isinstance(data_serialized, str):
+                data_serialized = bytes(data_serialized, 'utf-8')
 
-server = None
+            writer.write(data_serialized)
+            await writer.drain()
+
+async def tcp_run():
+    print('Starting tcp server')
+    server = await asyncio.start_server(
+        handle, '127.0.0.1', 8000)
+
+    addrs = ', '.join(str(sock.getsockname()) for sock in server.sockets)
+    print(f'Serving on {addrs}')
+
+    async with server:
+        await server.serve_forever()
+
 def start():
-    global server
-    try:
-        address = ('localhost', 8000)  # let the kernel assign a port
-        server = socketserver.TCPServer(address, RequestHandler)
-
-        thread = threading.Thread(target=server.serve_forever, daemon=True)
-        thread.start()
-    except OSError:
-        pass
-
-def shutdown():
-    global server
-    server.shutdown()
-    server.socket.close()
-    ic("Shutdown tcp")
+    # daemon=True makes the program stop and cleanup correctly with only one Ctrl-C 
+    # otherwise, this part of the program only stops with two Ctrl-C 
+    # the 
+    thread = threading.Thread(target=asyncio.run, args=(tcp_run(),), daemon=True)
+    thread.start()

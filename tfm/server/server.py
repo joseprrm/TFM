@@ -125,12 +125,7 @@ if __name__ == '__main__':
 
         import waitress 
         waitress.serve(app, port=5000)
-    except Exception:
-        # I don't know why it is not getting executed
-        # I tried running it with waitress, flask CLI and directly with python with app.run()
-        # I tried with flask debug mode on and off.  
-        print("EXCEPTION CATCHED. THIS IS NOT SHOWING UP")
+    except Exception as e:
+        print(e)
     finally:
-        # This does get executed
         print('Exiting')
-        server_tcp.shutdown()
