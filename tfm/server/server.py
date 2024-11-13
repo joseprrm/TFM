@@ -122,7 +122,9 @@ if __name__ == '__main__':
 
         import server_tcp
         server_tcp.start()
-        app.run()
+
+        import waitress 
+        waitress.serve(app, port=5000)
     except Exception:
         # I don't know why it is not getting executed
         # I tried running it with waitress, flask CLI and directly with python with app.run()
