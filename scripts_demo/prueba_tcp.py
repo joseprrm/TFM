@@ -8,7 +8,7 @@ l = []
 ds = _client.get_dataset('big_csv_int_1g_split')
 start = time.time()
 #for i in ds.filter_columns(['C','c', 'a', 'b', 'f']):
-for i in ds.filter_columns(['C']):
+for i in ds.filter_columns('C'):
 #for i in ds:
     l.append(i)
 end = time.time()
