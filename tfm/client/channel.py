@@ -61,5 +61,26 @@ class TCPChannel(Channel):
         #ic('Closing client socket')
         self.socket.close()
 
+import asyncio
+class TCPAsyncChannel():
+    def __init__(self, reader, writer):
+        ip="127.0.0.1"
+        port=8000
+        self.reader = reader
+        self.writer = writer
 
-mapping = {'http': HTTPChannel, 'websocket': WebsocketChannel, 'tcp': TCPChannel}
+    async def make_petition_async(self, petition):
+        # just ignore the url
+        url, query = petition
+        query = json.dumps(query).encode('utf-8')
+        self.writer.write(query)
+        await self.writer.drain()
+        response = await self.reader.read(4096)
+        return response
+
+    async def close(self):
+        self.writer.close()
+        await self.writer.wait_closed()
+
+
+mapping = {'http': HTTPChannel, 'websocket': WebsocketChannel, 'tcp': TCPChannel, 'tcpasync': TCPAsyncChannel}

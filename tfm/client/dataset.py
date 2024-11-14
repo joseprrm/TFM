@@ -44,6 +44,22 @@ class ILocIndexer():
                 raise ProgrammingError
 
 
+class DatasetIteratorAsync():
+    def __init__(self, dataset):
+        self.dataset = dataset
+        self.number_of_rows = dataset.number_of_rows()
+        self.index = 0
+
+    async def __anext__(self):
+        if self.index < self.number_of_rows:
+            tmp = await self.dataset.client.read_csv_async(self.dataset.name,
+                                               row=self.index,
+                                               columns=self.dataset.columns_filter)
+            self.index += 1
+            return tmp
+        else:
+            raise StopAsyncIteration
+
 class DatasetIterator():
     def __init__(self, dataset):
         self.dataset = dataset
@@ -91,6 +107,9 @@ class Dataset():
 
     def __iter__(self):
         return DatasetIterator(self)
+
+    def __aiter__(self):
+        return DatasetIteratorAsync(self)
 
     def filter_columns(self, columns):
         new_dataset = Dataset(self.name, self.client, filter_columns=columns)
