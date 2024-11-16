@@ -37,6 +37,7 @@ def get_column_names(dataset_name):
 
 @app.route("/datasets/<dataset_name>/number_of_rows", methods = ["GET"])
 def get_number_of_rows(dataset_name):
+    ic('get_number_of_rows()')
     dataset = current_app.datasets[dataset_name]
 
     if tmp := dataset.number_of_rows:

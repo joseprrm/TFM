@@ -8,6 +8,7 @@ from icecream import ic
 import initialization
 import clear_cache
 import flask_server
+import fastapi_server
 import tcp_server
 import websocket_server
 
@@ -35,6 +36,7 @@ def main():
 
         clear_cache.start(datasets)
         flask_server.start(datasets)
+        #fastapi_server.start(datasets)
         websocket_server.start(datasets)
         tcp_server.start(datasets)
 
