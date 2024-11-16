@@ -19,9 +19,6 @@ def loop(datasets):
                     del dataset.partition_cache[path]
         time.sleep(0.5)
 
-datasets = None
-def start(_datasets):
-    global datasets
-    datasets = _datasets
+def start(datasets):
     thread = threading.Thread(target=loop, args=(datasets,), daemon=True)
     thread.start()
