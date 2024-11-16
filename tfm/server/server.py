@@ -1,156 +1,55 @@
 import os
 import signal
-import json
+import time
 
 # for debug
 from icecream import ic
 
-from flask import Flask, current_app
-from flask import request
+import initialization
+import clear_cache
+import flask_server
+import tcp_server
+import websocket_server
 
-import serialization
-
-import server_init
-
-app = Flask(__name__)
-
-#import logging
-#log = logging.getLogger('werkzeug')
-#log.setLevel(logging.ERROR)
-
-def process_query(dataset, query):
-    optimized = dataset.optimized
-    if optimized:
-        dataframe = dataset.read_optimized(row_input = query.get('row'),
-                                           rows_input = query.get('rows'))
-    else:
-        dataframe = dataset.read()
-
-    if query.get('random') is True:
-        if query.get('number_of_samples'):
-            dataframe = dataframe.sample(query.get('number_of_samples'))
-        else:
-            dataframe = dataframe.sample(1)
-    if query.get('column'):
-        dataframe = dataframe[query['column']]
-    if query.get('columns'):
-        dataframe = dataframe[query['columns']]
-    if query.get('rows') :
-        step = None
-        if query.get('step'):
-            step = query.get('step')
-        else:
-            step = 1
-        # -1 to make it not include the last number
-        dataframe = dataframe.loc[query["rows"][0]:(query["rows"][1] - 1):step]
-        # Reindex to give a Series/DataFrame with indexes starting from 0
-        dataframe = dataframe.reset_index(drop=True)
-
-    if query.get('row') is not None:
-        dataframe = dataframe.loc[query["row"]]
-
-    return dataframe
-
-@app.route("/datasets/<dataset_name>", methods = ["GET"])
-def get_dataset(dataset_name):
-    dataset = current_app.dataset[dataset_name]
-
-    query = request.json
-    dataframe = process_query(dataset, query)
-
-    data_serialized = serialization.mapping[query['method']]().serialize(dataframe)
-    return data_serialized
-
-@app.route("/datasets/<dataset_name>/column_names", methods = ["GET"])
-def get_column_names(dataset_name):
-
-    dataset = current_app.dataset[dataset_name]
-    column_names = dataset.columns
-    response = json.dumps(column_names)
-
-    return response
-
-@app.route("/datasets/<dataset_name>/number_of_rows", methods = ["GET"])
-def get_number_of_rows(dataset_name):
-    dataset = current_app.dataset[dataset_name]
-
-    if tmp := dataset.number_of_rows:
-        # if it is present in the metadata, use it
-        number_of_rows = int(tmp)
-    else:
-        # else, calculate it by counting the lines
-
-        number_of_rows = 0
-        for path in dataset.paths:
-            with open(path, 'rb') as file:
-                number_of_rows += sum(1 for _ in file)
-        if dataset.header_in_file is True:
-            number_of_rows = number_of_rows - 1*len(dataset.paths)
-
-        # "cache" it
-        dataset.number_of_rows = number_of_rows
-
-    response = json.dumps(dataset.number_of_rows)
-    return response
-
-@app.route("/datasets")
-def datasets():
-    names = list(current_app.dataset.keys())
-    response = json.dumps(names)
-    return response
-
-
-def sighup_handler(signum, frame):
-    with app.app_context():
-        current_app.dataset_metadatas = server_init.init()
-        print('Reloading')
-
-signal.signal(signal.SIGHUP, sighup_handler)
+# global variable that holds the Dataset objects
+datasets = None
 
 # TODO clean PID on exit
-# Save the PID
-# In debug mode two PIDs exist, so the second overwrites the first one
-with open('/tmp/tfmpid', 'wt') as f:
-    f.write(str(os.getpid()))
+def write_pid_file():
+    with open('/tmp/tfmpid', 'wt') as f:
+        f.write(str(os.getpid()))
 
-import time
-import threading
-def loop():
-    with app.app_context():
-        while True:
-            now = time.time()
-            for name, dataset in current_app.dataset.items():
-                if dataset.optimized is True:
-                    paths_to_delete = []
-                    for path, value in dataset.partition_cache.items():
-                        access_time = value[1]
-                        difference = now - access_time
-                        if difference > 20:
-                            paths_to_delete.append(path)
+def sighup_handler(signum, frame):
+    print('Reloading')
+    global datasets
+    _datasets = initialization.initialize_dataset_dict()
+    # clear and update so we keep using the same dictionary. This is important, because if we directly set the global variable instead, then the other threads will keep using the old reference.
+    datasets.clear()
+    datasets.update(_datasets)
 
-                    for path in paths_to_delete:
-                        del dataset.partition_cache[path]
-
-            time.sleep(0.5)
-
-
-if __name__ == '__main__':
+def main():
     try:
-        with app.app_context():
-            current_app.dataset = server_init.init()
+        global datasets
+        # only time this variable should be defined
+        datasets = initialization.initialize_dataset_dict()
 
-        thread = threading.Thread(target=loop, daemon=True)
-        thread.start()
+        clear_cache.start(datasets)
+        flask_server.start(datasets)
+        websocket_server.start(datasets)
+        tcp_server.start(datasets)
 
-        import server_websocket
-        server_websocket.start(app)
+        # wait for the other threads to run wasting small amount of CPU 
+        while True:
+            time.sleep(999999)
 
-        import server_tcp
-        server_tcp.start(app)
-
-        import waitress
-        waitress.serve(app, port=5000)
+    except KeyboardInterrupt as e:
+        print('Program stopped by Ctrl-C')
     except Exception as e:
         print(e)
     finally:
         print('Exiting')
+
+if __name__ == '__main__':
+    write_pid_file()
+    signal.signal(signal.SIGHUP, sighup_handler)
+    main()

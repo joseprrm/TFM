@@ -1,10 +1,7 @@
 from icecream import ic
 import time
 from client.client import Client
-from client.client_websocket import ClientWebsocket
 
-#_client = Client.get_client("127.0.0.1", 5000, method="pickle_base64")
-#_client = ClientWebsocket("127.0.0.1", 5000)
 _client = Client.get_client("127.0.0.1", 5000, method="pickle_base64", channel_method='websocket')
 dataset_names = _client.list_datasets()
 l = []
