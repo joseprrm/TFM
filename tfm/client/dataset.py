@@ -177,6 +177,11 @@ class Dataset():
                         arguments["rows"] = (selector_rows.start, selector_rows.stop)
                         arguments["step"] = selector_rows.step
 
+        # if not filtering by columns in getitem, use the columns_filter
+        if not arguments["column"] or not arguments["columns"]:
+            if self.columns_filter is not None:
+                arguments["columns"] = self.columns_filter
+
         return self.client.read_csv(self.name, **arguments)
 
     def select(self, rows=None, columns=None):
