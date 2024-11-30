@@ -61,6 +61,22 @@ class JSONSerializer(Serializer):
                 raise ProgrammingError
         return data
 
+class JSONPlainSerializer(Serializer):
+    def serialize(self, data):
+        _json_str = ""
+        match data:
+            case pandas.DataFrame():
+                _json_str = data.to_json()
+            case pandas.Series():
+                _json_str = data.to_json()
+            case _:
+                _json_str = json.dumps(data, cls=NumpyEncoder)
+        return _json_str
+
+    def deserialize(self, response):
+        # no intented for use in the client library
+        raise ProgrammingError
+
 class PickleSerializer(Serializer):
     def serialize(self, data):
         data_serialized = pickle.dumps(data)
@@ -85,5 +101,6 @@ mapping = {
     "pickle_base64": PickleBase64Serializer,
     "pickle": PickleSerializer,
     "pickle_compressed": PickleCompressedSerializer,
-    "json": JSONSerializer
+    "json": JSONSerializer,
+    "json_plain": JSONPlainSerializer
 }
