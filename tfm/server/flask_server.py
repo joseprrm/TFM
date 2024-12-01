@@ -79,6 +79,13 @@ def get_dataset_multicast(dataset_name):
     multicast.send(query['ip'], query['port'], data_serialized)
     return ""
 
+@app.route("/multicast_end", methods = ["GET"])
+def multicast_end():
+    query = request.json
+    data_serialized = serialization.mapping[query['method']]().serialize("END_OF_MULTICAST")
+    multicast.send(query['ip'], query['port'], data_serialized)
+    return ""
+
 def flask_run():
     print('Starting flask server')
     waitress.serve(app, port=5000)
