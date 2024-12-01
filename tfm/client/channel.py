@@ -5,6 +5,7 @@ from icecream import ic
 import requests
 from websockets.sync.client import connect
 import socket
+import struct
 
 class Channel(ABC):
     @abstractmethod
@@ -82,5 +83,22 @@ class TCPAsyncChannel():
         self.writer.close()
         await self.writer.wait_closed()
 
+class MulticastListener:
+    def __init__(self, ip, port):
+        self.ip = ip
+        self.port = port
+        self._setup_socket()
 
-mapping = {'http': HTTPChannel, 'websocket': WebsocketChannel, 'tcp': TCPChannel, 'tcpasync': TCPAsyncChannel}
+    def _setup_socket(self):
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.socket.bind(('', self.port))
+        group = socket.inet_aton(self.ip)
+        mreq = struct.pack('4sL', group, socket.INADDR_ANY)
+        self.socket.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+
+    def read_data(self):
+        data, address = self.socket.recvfrom(1024)  # Buffer size is 1024 bytes
+        return data
+
+mapping = {'http': HTTPChannel, 'websocket': WebsocketChannel, 'tcp': TCPChannel, 'tcpasync': TCPAsyncChannel, 'multicast_requester': HTTPChannel, 'multicast_listener': MulticastListener}

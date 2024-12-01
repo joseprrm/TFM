@@ -10,6 +10,7 @@ from flask import request
 import waitress
 
 import serialization
+import multicast
 
 from process_query import process_query
 
@@ -64,6 +65,19 @@ def datasets():
     names = list(current_app.datasets.keys())
     response = json.dumps(names)
     return response
+
+@app.route("/datasets/<dataset_name>/multicast", methods = ["GET"])
+def get_dataset_multicast(dataset_name):
+    ic(f'/datasets/{dataset_name}/multicast')
+    dataset = current_app.datasets[dataset_name]
+
+    query = request.json
+    ic(query)
+    dataframe = process_query(dataset, query)
+
+    data_serialized = serialization.mapping[query['method']]().serialize(dataframe)
+    multicast.send(query['ip'], query['port'], data_serialized)
+    return ""
 
 def flask_run():
     print('Starting flask server')

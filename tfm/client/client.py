@@ -1,4 +1,5 @@
 import requests
+from icecream import ic
 
 from utils import ProgrammingError
 
@@ -16,9 +17,25 @@ class Client():
         """
         Factory method to return different types of client.
         """
+
         serializer = serialization.mapping[method]()
         _channel = channel.mapping[channel_method]()
+
         return Client(*args, method, serializer, _channel)
+
+    @classmethod
+    def get_client_multicast(cls, *args, mtype, multicast_ip=None, multicast_port=None, method="pickle_base64", ):
+        """
+        Factory method to return different types of client.
+        """
+
+        serializer = serialization.mapping[method]()
+        if mtype == 'multicast_requester':
+            _channel = channel.mapping["http"]()
+        if mtype == 'multicast_listener':
+            _channel = channel.mapping["multicast_listener"](multicast_ip, multicast_port)
+
+        return Client(*args, method, serializer, _channel, multicast_ip, multicast_port)
 
     @classmethod
     async def get_client_tcp_async(cls, *args, method="pickle_base64"):
@@ -29,7 +46,7 @@ class Client():
         _channel = channel.mapping['tcpasync'](reader, writer)
         return Client(*args, method, serializer, _channel)
 
-    def __init__(self, server_address, server_port, method, serializer, channel):
+    def __init__(self, server_address, server_port, method, serializer, channel, multicast_ip=None, multicast_port=None):
         """
         server_address: a string with the IP or hostname of the server
         server_port: intenger with the port number
@@ -40,6 +57,8 @@ class Client():
         self.method = method
         self.serializer = serializer
         self.channel = channel
+        self.multicast_ip = multicast_ip
+        self.multicast_port = multicast_port
 
     def get_dataset(self, dataset_name):
         return Dataset(dataset_name, self)
@@ -59,6 +78,11 @@ class Client():
         contents = self.serializer.deserialize(response)
         return contents
 
+    def get_data(self):
+        data = self.channel.read_data()
+        data = self.serializer.deserialize(data)
+        return data
+
     def read_csv(self, dataset_name, **kwargs):
         """
         Possible arguments:
@@ -77,14 +101,32 @@ class Client():
         query = self._add_method(query)
         query["dataset_name"] = dataset_name
 
+        if self.is_multicast():
+            query = self._add_multicast(query)
+            url = url + "/multicast"
+
         petition = (url, query)
         response = self.channel.make_petition(petition)
+
+        if self.is_multicast():
+            return
 
         contents = self.serializer.deserialize(response)
         return contents
 
     def _add_method(self, query):
         query['method'] = self.method
+        return query
+
+    def is_multicast(self):
+        if self.multicast_ip and self.multicast_port:
+            return True
+        else:
+            return False
+
+    def _add_multicast(self, query):
+        query['ip'] = self.multicast_ip
+        query['port'] = self.multicast_port
         return query
 
     def close(self):
