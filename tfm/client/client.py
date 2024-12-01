@@ -110,6 +110,8 @@ class Client():
         column_names = response.json()
         return column_names
 
+
+
 class MulticastClient(Client):
     @classmethod
     def get_client_multicast(cls, *args, role, multicast_ip=None, multicast_port=None, method="pickle_base64", ):
@@ -123,6 +125,7 @@ class MulticastClient(Client):
             _channel = channel.mapping["multicast_listener"](multicast_ip, multicast_port)
 
         return MulticastClient(*args, method, serializer, _channel, multicast_ip, multicast_port)
+#        return MulticastRequesterClient(*args, method, serializer, _channel, multicast_ip, multicast_port)
 
     def __init__(self, server_address, server_port, method, serializer, channel, multicast_ip=None, multicast_port=None):
         """
@@ -133,12 +136,6 @@ class MulticastClient(Client):
         self.multicast_port = multicast_port
         self.end_of_multicast = False
         super().__init__(server_address, server_port, method, serializer, channel)
-
-    def is_multicast(self):
-        if self.multicast_ip and self.multicast_port:
-            return True
-        else:
-            return False
 
     def _add_multicast(self, query):
         query['ip'] = self.multicast_ip
@@ -154,14 +151,10 @@ class MulticastClient(Client):
         query = self._add_method(query)
         query["dataset_name"] = dataset_name
 
-        if self.is_multicast():
-            query = self._add_multicast(query)
+        query = self._add_multicast(query)
 
         petition = (url, query)
         response = self.channel.make_petition(petition)
-
-        if self.is_multicast():
-            return
 
     def get_data(self):
         data = self.channel.read_data()
@@ -173,11 +166,16 @@ class MulticastClient(Client):
     def send_multicast_end_message(self):
         url = f"{self.base_url}/multicast_end"
         query = {'method':self.method}
-        if self.is_multicast():
-            query = self._add_multicast(query)
+        query = self._add_multicast(query)
         petition = (url, query)
         response = self.channel.make_petition(petition)
 
     def close(self):
         self.send_multicast_end_message()
         self.channel.close()
+
+class MulticastRequesterClient(MulticastClient):
+    pass
+
+class MulticastRequesterClient(MulticastClient):
+    pass
