@@ -1,8 +1,8 @@
 from icecream import ic
 import time
-from client.client import MulticastClient
+from client.client import MulticastListenerClient
 
-_client = MulticastClient.get_client_multicast("127.0.0.1", 5000, role='listener', multicast_ip="230.0.0.1", multicast_port=2345)
+_client = MulticastListenerClient.get_client("127.0.0.1", 5000, multicast_ip="230.0.0.1", multicast_port=2345)
 
 while True:
     data = _client.get_data()

@@ -113,20 +113,6 @@ class Client():
 
 
 class MulticastClient(Client):
-    @classmethod
-    def get_client_multicast(cls, *args, role, multicast_ip=None, multicast_port=None, method="pickle_base64", ):
-        """
-        Factory method to return different types of client.
-        """
-        serializer = serialization.mapping[method]()
-        if role == 'requester':
-            _channel = channel.mapping["http"]()
-        if role == 'listener':
-            _channel = channel.mapping["multicast_listener"](multicast_ip, multicast_port)
-
-        return MulticastClient(*args, method, serializer, _channel, multicast_ip, multicast_port)
-#        return MulticastRequesterClient(*args, method, serializer, _channel, multicast_ip, multicast_port)
-
     def __init__(self, server_address, server_port, method, serializer, channel, multicast_ip=None, multicast_port=None):
         """
         server_address: a string with the IP or hostname of the server
@@ -142,6 +128,16 @@ class MulticastClient(Client):
         query['port'] = self.multicast_port
         return query
 
+class MulticastRequesterClient(MulticastClient):
+    @classmethod
+    def get_client(cls, *args, multicast_ip=None, multicast_port=None, method="pickle_base64", ):
+        """
+        Factory method to return different types of client.
+        """
+        serializer = serialization.mapping[method]()
+        _channel = channel.mapping["http"]()
+        return MulticastRequesterClient(*args, method, serializer, _channel, multicast_ip, multicast_port)
+
     def read_csv(self, dataset_name, **kwargs):
         url = f"{self.base_url}/datasets/{dataset_name}/multicast"
 
@@ -156,13 +152,6 @@ class MulticastClient(Client):
         petition = (url, query)
         response = self.channel.make_petition(petition)
 
-    def get_data(self):
-        data = self.channel.read_data()
-        data = self.serializer.deserialize(data)
-        if data == 'END_OF_MULTICAST':
-            self.end_of_multicast = True
-        return data
-
     def send_multicast_end_message(self):
         url = f"{self.base_url}/multicast_end"
         query = {'method':self.method}
@@ -174,8 +163,18 @@ class MulticastClient(Client):
         self.send_multicast_end_message()
         self.channel.close()
 
-class MulticastRequesterClient(MulticastClient):
-    pass
-
-class MulticastRequesterClient(MulticastClient):
-    pass
+class MulticastListenerClient(MulticastClient):
+    @classmethod
+    def get_client(cls, *args, multicast_ip=None, multicast_port=None, method="pickle_base64", ):
+        """
+        Factory method to return different types of client.
+        """
+        serializer = serialization.mapping[method]()
+        _channel = channel.mapping["multicast_listener"](multicast_ip, multicast_port)
+        return MulticastListenerClient(*args, method, serializer, _channel, multicast_ip, multicast_port)
+    def get_data(self):
+        data = self.channel.read_data()
+        data = self.serializer.deserialize(data)
+        if data == 'END_OF_MULTICAST':
+            self.end_of_multicast = True
+        return data
