@@ -5,10 +5,10 @@ command="${1}"
 shift
 
 if [[ "${command}" == init ]]; then
-	if [[ ! -d venv ]]; then
+    if [[ ! -d venv ]]; then
         python -m venv venv
-   	fi 
-	source venv/bin/activate
+    fi 
+    source venv/bin/activate
     pip install -e .
 elif [[ "${command}" == server ]]; then
         python tfm/server/server.py
@@ -19,7 +19,7 @@ elif [[ "${command}" == test ]]; then
         python -m unittest discover -s tests -k "${1}"
     fi
 elif [[ "${command}" == reload ]]; then
-	kill -SIGHUP "$(cat /tmp/tfmpid)"
+    kill -SIGHUP "$(cat /tmp/tfmpid)"
 elif [[ "${command}" == clean ]]; then
     rm -r venv 
 fi
