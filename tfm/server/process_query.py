@@ -1,8 +1,10 @@
 def process_query(dataset, query):
     optimized = dataset.optimized
     if optimized:
-        dataframe = dataset.read_optimized(row_input = query.get('row'),
-                                           rows_input = query.get('rows'))
+        if query.get('row') is not None or query.get('rows') is not None:
+            dataframe = dataset.read_optimized(row_input = query.get('row'), rows_input = query.get('rows'))
+        else:
+            dataframe = dataset.read()
     else:
         dataframe = dataset.read()
 

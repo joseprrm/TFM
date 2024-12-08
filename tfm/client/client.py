@@ -13,9 +13,6 @@ import asyncio
 class Client():
     @classmethod
     def get_client(cls, *args, method="pickle_base64", channel_method='http'):
-        """
-        Factory method to return different types of client.
-        """
         serializer = serialization.mapping[method]()
         _channel = channel.mapping[channel_method]()
         return Client(*args, method, serializer, _channel)
@@ -60,15 +57,6 @@ class Client():
         return contents
 
     def read_csv(self, dataset_name, **kwargs):
-        """
-        Possible arguments:
-        row: int
-        column: str
-        columns: [str, ...]
-        rows: (start, end)
-        step(to be used with rows): int
-        random: boolean o None
-        """
         url = f"{self.base_url}/datasets/{dataset_name}"
 
         # This deletes the elements that are None,
@@ -172,6 +160,7 @@ class MulticastListenerClient(MulticastClient):
         serializer = serialization.mapping[method]()
         _channel = channel.mapping["multicast_listener"](multicast_ip, multicast_port)
         return MulticastListenerClient(*args, method, serializer, _channel, multicast_ip, multicast_port)
+
     def get_data(self):
         data = self.channel.read_data()
         data = self.serializer.deserialize(data)

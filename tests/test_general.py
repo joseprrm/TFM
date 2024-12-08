@@ -303,6 +303,12 @@ class TestDatasetOptimized(unittest.TestCase):
 
         self.assertEqual(len(self.dataset_nosplit[range(0, 23456), "Z"]), 23456)
 
+    def test_column(self):
+        # this should not fail
+        self.dataset_split["Z"]
+        self.dataset_split[["Z"]]
+        self.dataset_split[["a", "Z"]]
+
     def test_correct_concat(self):
         ds1 = self.dataset_split[range(13456, 33456), "Z"]
         ds2 = self.dataset_split[range(13456, 33456 + 10), "Z"]

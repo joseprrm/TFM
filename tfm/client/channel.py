@@ -49,7 +49,6 @@ class TCPChannel(Channel):
         ip="127.0.0.1"
         port=8000
         self.socket.connect((ip, port))
-        #ic('connect socket')
 
     def make_petition(self, petition):
         # just ignore the url
@@ -59,7 +58,6 @@ class TCPChannel(Channel):
         return response
 
     def close(self):
-        #ic('Closing client socket')
         self.socket.close()
 
 import asyncio
