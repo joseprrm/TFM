@@ -5,14 +5,14 @@ import pandas
 
 header_in_file = True
 
-dataset_path = "datasets/big_csv_int_1g/csv.csv"
+dataset_path = "datasets/big/big.csv"
 
-output_dir = "datasets/big_csv_int_1g_split/"
+output_dir = "datasets/big_partitions/"
 
 template = "{number}.csv"
 
-ROWS_IN_PARTITION = 10000
-FILENAME_ZEROS_PADDING = 5
+ROWS_IN_PARTITION = 100000
+FILENAME_ZEROS_PADDING = 7
 
 def write_partition(partition, partition_number):
         output_filename = template.format(number=str(partition_number).zfill(FILENAME_ZEROS_PADDING))
@@ -56,7 +56,10 @@ with open(dataset_path, 'rt') as file:
         header = file.readline()
 
     end_of_file = False
+    counter = 0
     while not end_of_file:
+        counter += 1
+        print(counter)
         partition, end_of_file = read_partition(file)
         filename = write_partition(partition, partition_number)
 
